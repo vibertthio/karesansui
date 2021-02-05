@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import styles from './index.module.scss';
+// import styles from './index.module.scss';
 import info from './assets/info.png';
 // import './three/demo';
 import './three/kare';
 
+
+const styles = {};
 class App extends Component {
   constructor() {
     super();

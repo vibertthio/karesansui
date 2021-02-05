@@ -1,10 +1,11 @@
 /* global THREE */
 
 import 'three';
-import 'three/OBJLoader';
-import 'three/MTLLoader';
+import 'three/loaders/OBJLoader';
+import 'three/loaders/MTLLoader';
+import 'three/controls/TrackballControls';
+import 'three/controls/OrbitControls';
 
-import OrbitControls from 'orbit-controls-es6';
 import Stats from 'libs/stats.min';
 
 import water from './shaders/water.vert';
@@ -14,6 +15,7 @@ import sand from './textures/sand-3.jpg';
 import rockObj from './models/rock_1/rock_1.obj';
 import rockMtl from './models/rock_1/rock_1.mtl';
 
+const OrbitControls = THREE.OrbitControls;
 
 // const NUM_TEXELS = WIDTH * WIDTH;
 const WIDTH = 512;
