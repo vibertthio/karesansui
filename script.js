@@ -95,6 +95,7 @@ function init() {
   initControl()
   loadModels()
   initAnimations()
+  initReticle()
 }
 
 function initScene() {
@@ -468,17 +469,22 @@ function initAnimations() {
 }
 
 function initReticle() {
-  const geometry = new THREE.IcosahedronGeometry( 0.2, 8 )
+  const geometry = new THREE.IcosahedronGeometry( 0.05, 8 )
   const material = new THREE.MeshStandardMaterial({
-    color: Math.random() * 0xffffff,
+    color: 0xffffff,
     roughness: 0.7,
     metalness: 0.0
   })
   reticle = new THREE.Mesh( geometry, material )
   
-  reticle.castShadow = true;
-  object.receiveShadow = true;
-  reticle.visible = true
+  reticle.castShadow = true
+  reticle.receiveShadow = true
+  reticle.position.x = 0
+  reticle.position.y = 0.5
+  reticle.position.z = -1
+  reticle.visible = false
+  
+  scene.add(reticle)
 }
 
 function changeLayout() {
@@ -651,10 +657,6 @@ function getIntersections( controller ) {
 
 function intersectObjects( controller ) {
 
-  // Do not highlight when already selected
-
-  if ( controller.userData.selected !== undefined ) return
-
   const line = controller.getObjectByName( 'line' )
   const intersections = getIntersections( controller )
 
@@ -665,22 +667,15 @@ function intersectObjects( controller ) {
     const intersection = intersections[ 0 ]
 
     const object = intersection.object
-    intersected.push( object )
+    reticle.visible = true
+    reticle.position = intersection.position
 
     line.scale.z = intersection.distance
 
   } else {
 
     line.scale.z = 5
-
-  }
-
-}
-
-function cleanIntersected() {
-
-  while ( intersected.length ) {
-    const object = intersected.pop()
+    reticle.visible = false
   }
 
 }
@@ -709,6 +704,8 @@ function lerp(low, high, from, to, v) {
 }
 
 function render() {
+  
+  intersectObjects(controller1)
   
   // TWEEN
   TWEEN.update()
