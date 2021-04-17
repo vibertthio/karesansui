@@ -60,6 +60,7 @@ const rockObj = './models/rock/rock_1.obj'
 const rockMtl = './models/rock/rock_1.mtl'
 let rock
 let mouseOnRock = false
+let rockRotationSpeed = 1.0
 // let draggingOnRock = false;
 let rockPosition
 const rockScale = 70 * globalScale
@@ -91,9 +92,6 @@ function init() {
   initControl()
   loadModels()
   initAnimations()
-
-  // createSpheres();
-  // valuesChanger();
 }
 
 function initScene() {
@@ -196,12 +194,7 @@ function initScene() {
   container.addEventListener('pointermove', onPointerMove)
 
   document.addEventListener('keydown', function ({ key }) {
-    // W Pressed: Toggle wireframe
-    if (key === 'w') {
-      waterMesh.material.wireframe = !waterMesh.material.wireframe
-      waterMesh.material.needsUpdate = true
-    } else if (key === ' ') {
-      console.log('change layout')
+    if (key === ' ') {
       changeLayout()
     }
   })
@@ -211,31 +204,25 @@ function initScene() {
   const gui = new GUI()
 
   const effectController = {
-    mouseSize: 2.0,
-    viscosity: 0.98,
-    spheresEnabled: spheresEnabled,
+    rockRotationSpeed: 0.0,
   }
 
-  const valuesChanger = function () {
-    heightmapVariable.material.uniforms['mouseSize'].value = effectController.mouseSize
-    heightmapVariable.material.uniforms['viscosityConstant'].value = effectController.viscosity
-    spheresEnabled = effectController.spheresEnabled
-    for (let i = 0; i < NUM_SPHERES; i++) {
-      if (spheres[i]) {
-        spheres[i].visible = spheresEnabled
-      }
-    }
+  const valuesChanger = () => {
+    rockRotationSpeed = effectController.rockRotationSpeed
   }
 
-  gui.add(effectController, 'mouseSize', 0.2, 10.0, 0.1).onChange(valuesChanger)
-  gui.add(effectController, 'viscosity', 0.9, 0.999, 0.001).onChange(valuesChanger)
-  gui.add(effectController, 'spheresEnabled', 0, 1, 1).onChange(valuesChanger)
-  const buttonSmooth = {
-    smoothWater: function () {
-      smoothWater()
+  gui.add(effectController, 'rockRotationSpeed', -1.0, 1.0, 0.02).onChange(valuesChanger)
+
+  const buttons = {
+    changeLayout: () => {
+      changeLayout()
     },
+    toggleWireframe: false,
   }
-  gui.add(buttonSmooth, 'smoothWater')
+  gui.add(buttons, 'changeLayout')
+  gui.add(buttons, 'toggleWireframe').onChange(toggleWireframe)
+
+  valuesChanger()
 }
 
 function initWater() {
@@ -483,6 +470,11 @@ function changeGridUnit() {
   uniforms.uWaveTransform.value = [c, s, -s, c]
 }
 
+function toggleWireframe() {
+  waterMesh.material.wireframe = !waterMesh.material.wireframe
+  waterMesh.material.needsUpdate = true
+}
+
 function isSafari() {
   return !!navigator.userAgent.match(/Safari/i) && !navigator.userAgent.match(/Chrome/i)
 }
@@ -564,19 +556,6 @@ function fillTexture(texture) {
 
       p += 4
     }
-  }
-}
-
-function smoothWater() {
-  const currentRenderTarget = gpuCompute.getCurrentRenderTarget(heightmapVariable)
-  const alternateRenderTarget = gpuCompute.getAlternateRenderTarget(heightmapVariable)
-
-  for (let i = 0; i < 10; i++) {
-    smoothShader.uniforms['smoothTexture'].value = currentRenderTarget.texture
-    gpuCompute.doRenderTarget(smoothShader, alternateRenderTarget)
-
-    smoothShader.uniforms['smoothTexture'].value = alternateRenderTarget.texture
-    gpuCompute.doRenderTarget(smoothShader, currentRenderTarget)
   }
 }
 
@@ -709,7 +688,7 @@ function sceneUpdate(deltaTime, elapsedTime) {
   }
 
   if (rock) {
-    rock.rotation.y += deltaTime * 0.1
+    rock.rotation.y += deltaTime * rockRotationSpeed
   }
 }
 
