@@ -282,8 +282,10 @@ function initWater() {
   const geometryRay = new THREE.PlaneGeometry(BOUNDS, BOUNDS, 1, 1)
   meshRay = new THREE.Mesh(geometryRay, new THREE.MeshBasicMaterial({ color: 0xffffff, visible: false }))
   meshRay.rotation.x = -Math.PI / 2
+  meshRay.scale.set(globalScale, globalScale, globalScale)
   meshRay.matrixAutoUpdate = false
   meshRay.updateMatrix()
+  meshRay.name = 'meshRay'
   scene.add(meshRay)
 }
 
