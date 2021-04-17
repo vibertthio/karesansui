@@ -160,9 +160,13 @@ function initScene() {
     
     if (this.userData.name === 'controller1' && reticle.visible) {
       userGroup.position.x = reticle.position.x
-      userGroup.position.y = reticle.position.y
+      userGroup.position.z = reticle.position.z
       resetUserGroupPositions()
       
+    }
+    
+    if (this.userData.name === 'controller2') {
+      changeLayout()
     }
   }
 
@@ -220,7 +224,9 @@ function initScene() {
   userGroup = new THREE.Group();
   userGroup.position.set(0,0,0);
   userGroup.add(camera);
+  userGroup.add(controllerGrip1)
   userGroup.add(controller1)
+  userGroup.add(controllerGrip2)
   userGroup.add(controller2)
   scene.add(userGroup);
   
