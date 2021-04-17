@@ -1,4 +1,9 @@
 export default `
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 #include <common>
 
 #define M_PI 3.1415926535897932384626433832795
@@ -74,16 +79,17 @@ void main()	{
   // Background Waves
 
   // 1. Basics
-  heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
+  // heightmapValue.x = pow(sin(uv.x * 200.0), 0.8) * 10.0 * uBackgroundWaveScale;
+  heightmapValue.x = pow(abs(sin(uv.x * 200.0)), 0.5) * 10.0 * uBackgroundWaveScale;
 
   // 2. Advanced
   float angle = uvNew.x * 200.0;
   float wave = sin(uvNew.y * 10.0) * 8.0;
   float sum = angle + wave;
   if (sum > -20.0 * M_PI && sum < 10.0 * M_PI) {
-    heightmapValue.x = pow(sin(sum), 0.5) * 10.0 * uBackgroundWaveScale;
+    heightmapValue.x = pow(abs(sin(sum)), 0.5) * 10.0 * uBackgroundWaveScale;
   } else {
-    heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
+    heightmapValue.x = pow(abs(sin(uv.x * 200.0)), 0.5) * 10.0 * uBackgroundWaveScale;
   }
 
 
@@ -96,7 +102,7 @@ void main()	{
     float gridX = mod(uv.x / unit, 2.0);
     float gridY = mod(uv.y / unit, 2.0);
     if ((gridX < 1.0 && gridY < 1.0) || (gridX >= 1.0 && gridY >= 1.0)) {
-      heightmapValue.x = pow(sin(uv.y * 200.0), 0.5) * localScale * uBackgroundWaveScale;
+      heightmapValue.x = pow(abs(sin(uv.y * 200.0)), 0.5) * localScale * uBackgroundWaveScale;
     }
   } else {
 
@@ -112,9 +118,9 @@ void main()	{
 
     float sum = angle + wave;
     if (sum > uWaveStart * M_PI && sum < (uWaveStart + 30.0) * M_PI) {
-      heightmapValue.x = pow(sin(sum), 0.5) * localScale * uBackgroundWaveScale;
+      heightmapValue.x = pow(abs(sin(sum)), 0.5) * localScale * uBackgroundWaveScale;
     } else {
-      heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * localScale * uBackgroundWaveScale;
+      heightmapValue.x = pow(abs(sin(uv.x * 200.0)), 0.5) * localScale * uBackgroundWaveScale;
     }
   }
 
@@ -146,7 +152,7 @@ void main()	{
 
       // original
       if (dist < uCircularWaveRadius[i].x && dist > uCircularWaveRadius[i].y) {
-        heightmapValue.x = pow(sin(dist * 200.0), 0.5) * localScale;
+        heightmapValue.x = pow(abs(sin(dist * 200.0)), 0.5) * localScale;
       }
     }
   }
@@ -166,6 +172,7 @@ void main()	{
   // master
   heightmapValue.x *= pow(uMasterScale, (d + 0.02) * 15.0);
   heightmapValue.x += cnoise2((uv - .5)*500.) * 4.;
+  
   // if (heightmapValue.x < 20.0 && heightmapValue.x > -5.0) {
   //   heightmapValue.x += cnoise2(uv+1000) * 15.;
   // }
@@ -173,9 +180,9 @@ void main()	{
   // Ocean
 
   // elavation
-  heightmapValue.x += 10.0;
+  // heightmapValue.x += 10.0;
 
   gl_FragColor = heightmapValue;
 
 }
-`;
+`
