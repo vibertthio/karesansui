@@ -171,7 +171,6 @@ function initScene() {
     this.remove(this.children[0])
   })
   scene.add(controller2)
-
   // The XRControllerModelFactory will automatically fetch controller models
   // that match what the user is holding as closely as possible. The models
   // should be attached to the object returned from getControllerGrip in
