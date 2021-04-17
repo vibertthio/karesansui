@@ -172,6 +172,9 @@ void main()	{
 
   // Ocean
 
+  // elavation
+  heightmapValue.x += 10.0;
+
   gl_FragColor = heightmapValue;
 
 }
