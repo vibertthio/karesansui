@@ -87,8 +87,8 @@ animate()
 function init() {
   initScene()
   initLayout()
-  initWater()
   initHeightMap()
+  initWater()
   initControl()
   loadModels()
   initAnimations()
@@ -140,8 +140,8 @@ function initScene() {
 
   container.appendChild(VRButton.createButton(renderer))
 
+  
   // controllers
-
   function onSelectStart() {
     this.userData.isSelecting = true
   }
@@ -153,23 +153,23 @@ function initScene() {
   controller1 = renderer.xr.getController(0)
   controller1.addEventListener('selectstart', onSelectStart)
   controller1.addEventListener('selectend', onSelectEnd)
-  controller1.addEventListener('connected', function (event) {
-    this.add(buildController(event.data))
-  })
-  controller1.addEventListener('disconnected', function () {
-    this.remove(this.children[0])
-  })
+  // controller1.addEventListener('connected', function (event) {
+  //   this.add(buildController(event.data))
+  // })
+  // controller1.addEventListener('disconnected', function () {
+  //   this.remove(this.children[0])
+  // })
   scene.add(controller1)
 
   controller2 = renderer.xr.getController(1)
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
-  controller2.addEventListener('connected', function (event) {
-    this.add(buildController(event.data))
-  })
-  controller2.addEventListener('disconnected', function () {
-    this.remove(this.children[0])
-  })
+  // controller2.addEventListener('connected', function (event) {
+  //   this.add(buildController(event.data))
+  // })
+  // controller2.addEventListener('disconnected', function () {
+  //   this.remove(this.children[0])
+  // })
   scene.add(controller2)
   
   // The XRControllerModelFactory will automatically fetch controller models
@@ -186,7 +186,20 @@ function initScene() {
   controllerGrip2 = renderer.xr.getControllerGrip(1)
   controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2))
   scene.add(controllerGrip2)
+  
+  
+  const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, - 1 ) ] );
 
+  const line = new THREE.Line( geometry );
+  line.name = 'line';
+  line.scale.z = 5;
+
+  controller1.add( line.clone() );
+  controller2.add( line.clone() );
+
+  
+  
+  // Stats
   stats = new Stats()
   container.appendChild(stats.dom)
 
@@ -199,8 +212,11 @@ function initScene() {
     }
   })
 
+  // window resize
   window.addEventListener('resize', onWindowResize)
 
+  
+  // data.gui
   const gui = new GUI()
 
   const effectController = {
@@ -264,6 +280,7 @@ function initWater() {
   material.map = texture
   material.uniforms['map'].value = texture
   material.uniforms['specular'].value = new THREE.Color(0x010101)
+  material.uniforms['heightmap'].value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture
 
   waterUniforms = material.uniforms
 
@@ -561,77 +578,6 @@ function fillTexture(texture) {
   }
 }
 
-function createSpheres() {
-  const sphereTemplate = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), new THREE.MeshPhongMaterial({ color: 0xffff00 }))
-
-  for (let i = 0; i < NUM_SPHERES; i++) {
-    let sphere = sphereTemplate
-    if (i < NUM_SPHERES - 1) {
-      sphere = sphereTemplate.clone()
-    }
-
-    sphere.position.x = (Math.random() - 0.5) * BOUNDS * 0.7
-    sphere.position.z = (Math.random() - 0.5) * BOUNDS * 0.7
-
-    sphere.userData.velocity = new THREE.Vector3()
-
-    scene.add(sphere)
-
-    spheres[i] = sphere
-  }
-}
-
-function sphereDynamics() {
-  const currentRenderTarget = gpuCompute.getCurrentRenderTarget(heightmapVariable)
-
-  readWaterLevelShader.uniforms['levelTexture'].value = currentRenderTarget.texture
-
-  for (let i = 0; i < NUM_SPHERES; i++) {
-    const sphere = spheres[i]
-
-    if (sphere) {
-      // Read water level and orientation
-      const u = (0.5 * sphere.position.x) / BOUNDS_HALF + 0.5
-      const v = 1 - ((0.5 * sphere.position.z) / BOUNDS_HALF + 0.5)
-      readWaterLevelShader.uniforms['point1'].value.set(u, v)
-      gpuCompute.doRenderTarget(readWaterLevelShader, readWaterLevelRenderTarget)
-
-      renderer.readRenderTargetPixels(readWaterLevelRenderTarget, 0, 0, 4, 1, readWaterLevelImage)
-      const pixels = new Float32Array(readWaterLevelImage.buffer)
-
-      // Get orientation
-      waterNormal.set(pixels[1], 0, -pixels[2])
-
-      const pos = sphere.position
-
-      // Set height
-      pos.y = pixels[0]
-
-      // Move sphere
-      waterNormal.multiplyScalar(0.1)
-      sphere.userData.velocity.add(waterNormal)
-      sphere.userData.velocity.multiplyScalar(0.998)
-      pos.add(sphere.userData.velocity)
-
-      if (pos.x < -BOUNDS_HALF) {
-        pos.x = -BOUNDS_HALF + 0.001
-        sphere.userData.velocity.x *= -0.3
-      } else if (pos.x > BOUNDS_HALF) {
-        pos.x = BOUNDS_HALF - 0.001
-        sphere.userData.velocity.x *= -0.3
-      }
-
-      if (pos.z < -BOUNDS_HALF) {
-        pos.z = -BOUNDS_HALF + 0.001
-        sphere.userData.velocity.z *= -0.3
-      } else if (pos.z > BOUNDS_HALF) {
-        pos.z = BOUNDS_HALF - 0.001
-        sphere.userData.velocity.z *= -0.3
-      }
-    }
-  }
-}
-
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
@@ -700,37 +646,15 @@ function lerp(low, high, from, to, v) {
 }
 
 function render() {
-  // Set uniforms: mouse interaction
-  const uniforms = heightmapVariable.material.uniforms
-  if (mouseMoved) {
-    raycaster.setFromCamera(mouseCoords, camera)
-
-    const intersects = raycaster.intersectObject(meshRay)
-
-    if (intersects.length > 0) {
-      const point = intersects[0].point
-      uniforms['mousePos'].value.set(point.x, point.z)
-    } else {
-      uniforms['mousePos'].value.set(10000, 10000)
-    }
-
-    mouseMoved = false
-  } else {
-    uniforms['mousePos'].value.set(10000, 10000)
-  }
-
+  
   // TWEEN
   TWEEN.update()
 
   // Do the gpu computation
   gpuCompute.compute()
 
-  if (spheresEnabled) {
-    sphereDynamics()
-  }
-
   // Get compute output in custom uniform
-  waterUniforms['heightmap'].value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture
+  // waterUniforms['heightmap'].value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture
 
   sceneUpdate(clock.getDelta(), clock.getElapsedTime())
 
