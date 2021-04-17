@@ -88,35 +88,35 @@ void main()	{
 
 
   // Grid
-  // if (uGridUnit >= 2.0) {
-  //   // Basic Waves
-  //   heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * localScale * uBackgroundWaveScale;
+  if (uGridUnit >= 2.0) {
+    // Basic Waves
+    heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * localScale * uBackgroundWaveScale;
 
-  //   float unit = 1.0 / floor(uGridUnit);
-  //   float gridX = mod(uv.x / unit, 2.0);
-  //   float gridY = mod(uv.y / unit, 2.0);
-  //   if ((gridX < 1.0 && gridY < 1.0) || (gridX >= 1.0 && gridY >= 1.0)) {
-  //     heightmapValue.x = pow(sin(uv.y * 200.0), 0.5) * localScale * uBackgroundWaveScale;
-  //   }
-  // } else {
+    float unit = 1.0 / floor(uGridUnit);
+    float gridX = mod(uv.x / unit, 2.0);
+    float gridY = mod(uv.y / unit, 2.0);
+    if ((gridX < 1.0 && gridY < 1.0) || (gridX >= 1.0 && gridY >= 1.0)) {
+      heightmapValue.x = pow(sin(uv.y * 200.0), 0.5) * localScale * uBackgroundWaveScale;
+    }
+  } else {
 
-  //   // original
-  //   float angle = uvNew.x * 200.0;
-  //   float wave = sin(uvNew.y * 10.0) * 8.0;
+    // original
+    float angle = uvNew.x * 200.0;
+    float wave = sin(uvNew.y * 10.0) * 8.0;
 
-  //   // Cool Shit
-  //   // float angle = uv.x * uv.y * 200.0;
-  //   // float wave = sin(uvNew.y * 10.0 + sin(uvNew.x * 10.0) * 0.8) * 8.0;
-  //   // float wave = sin(uvNew.y * 10.0 + sin(uvNew.y * 10.0)) * 8.0;
-  //   // float wave = sin(uvNew.y * 10.0 + sin(uv.y * 10.0) * 2.0) * 8.0;
+    // Cool Shit
+    // float angle = uv.x * uv.y * 200.0;
+    // float wave = sin(uvNew.y * 10.0 + sin(uvNew.x * 10.0) * 0.8) * 8.0;
+    // float wave = sin(uvNew.y * 10.0 + sin(uvNew.y * 10.0)) * 8.0;
+    // float wave = sin(uvNew.y * 10.0 + sin(uv.y * 10.0) * 2.0) * 8.0;
 
-  //   float sum = angle + wave;
-  //   if (sum > uWaveStart * M_PI && sum < (uWaveStart + 30.0) * M_PI) {
-  //     heightmapValue.x = pow(sin(sum), 0.5) * localScale * uBackgroundWaveScale;
-  //   } else {
-  //     heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * localScale * uBackgroundWaveScale;
-  //   }
-  // }
+    float sum = angle + wave;
+    if (sum > uWaveStart * M_PI && sum < (uWaveStart + 30.0) * M_PI) {
+      heightmapValue.x = pow(sin(sum), 0.5) * localScale * uBackgroundWaveScale;
+    } else {
+      heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * localScale * uBackgroundWaveScale;
+    }
+  }
 
   // Circular Waves
   for (int i = 0; i < 3; i += 1) {
@@ -164,7 +164,7 @@ void main()	{
   // heightmapValue.x += (sin1 * amount * 2.0 + sin2 * amount * 0.4 + sin3 * amount * 0.32) * d;
 
   // master
-  // heightmapValue.x *= pow(uMasterScale, (d + 0.02) * 15.0);
+  heightmapValue.x *= pow(uMasterScale, (d + 0.02) * 15.0);
   heightmapValue.x += cnoise2((uv - .5)*500.) * 4.;
   // if (heightmapValue.x < 20.0 && heightmapValue.x > -5.0) {
   //   heightmapValue.x += cnoise2(uv+1000) * 15.;
