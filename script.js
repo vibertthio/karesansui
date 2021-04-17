@@ -35,11 +35,14 @@ let controllerGrip1, controllerGrip2
 let mouseMoved = false
 const mouseCoords = new THREE.Vector2()
 const raycaster = new THREE.Raycaster()
+const intersected = []
+const tempMatrix = new THREE.Matrix4()
 const clock = new THREE.Clock()
 
 let globalScale = 0.005
 let waterMesh
 let meshRay
+let reticle
 let gpuCompute
 let heightmapVariable
 let waterUniforms
@@ -189,7 +192,6 @@ function initScene() {
   
   
   const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, - 1 ) ] );
-
   const line = new THREE.Line( geometry );
   line.name = 'line';
   line.scale.z = 5;
@@ -465,6 +467,20 @@ function initAnimations() {
     })
 }
 
+function initReticle() {
+  const geometry = new THREE.IcosahedronGeometry( 0.2, 8 )
+  const material = new THREE.MeshStandardMaterial({
+    color: Math.random() * 0xffffff,
+    roughness: 0.7,
+    metalness: 0.0
+  })
+  reticle = new THREE.Mesh( geometry, material )
+  
+  reticle.castShadow = true;
+  object.receiveShadow = true;
+  reticle.visible = true
+}
+
 function changeLayout() {
   if (!layoutChanging) {
     layoutChanging = true
@@ -620,6 +636,53 @@ function buildController(data) {
       })
       return new THREE.Mesh(geometry, material)
   }
+}
+
+function getIntersections( controller ) {
+
+  tempMatrix.identity().extractRotation( controller.matrixWorld );
+
+  raycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
+  raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
+
+  return raycaster.intersectObjects( meshRay );
+
+}
+
+function intersectObjects( controller ) {
+
+  // Do not highlight when already selected
+
+  if ( controller.userData.selected !== undefined ) return
+
+  const line = controller.getObjectByName( 'line' )
+  const intersections = getIntersections( controller )
+
+  if ( intersections.length > 0 ) {
+
+    console.log(intersections)
+
+    const intersection = intersections[ 0 ]
+
+    const object = intersection.object
+    intersected.push( object )
+
+    line.scale.z = intersection.distance
+
+  } else {
+
+    line.scale.z = 5
+
+  }
+
+}
+
+function cleanIntersected() {
+
+  while ( intersected.length ) {
+    const object = intersected.pop()
+  }
+
 }
 
 function animate() {
