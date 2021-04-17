@@ -174,6 +174,7 @@ void main()	{
 
   // elavation
   heightmapValue.x += 10.0;
+  // heightmapValue.x = 0.0;
 
   gl_FragColor = heightmapValue;
 
