@@ -40,6 +40,7 @@ const tempMatrix = new THREE.Matrix4()
 const clock = new THREE.Clock()
 
 let globalScale = 0.005
+
 let waterMesh
 let meshRay
 let reticle
@@ -73,6 +74,9 @@ let rockRotateAni
 let rockAngle = 0
 const rockRotate = { value: 0 }
 
+// User
+let userGroup
+
 // Circular Wave
 let circularWavePosition = [
   // Default
@@ -102,10 +106,11 @@ function initScene() {
   container = document.createElement('div')
   document.body.appendChild(container)
 
+  
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000)
-  // camera.position.set( 0, 200, 350 );
-  camera.position.set(0, 2, 3)
-  // camera.lookAt( 0, 0, 0 );
+  camera.position.set(0, 1.6, 0)
+
+  
 
   scene = new THREE.Scene()
   scene.background = new THREE.Color(0x111111)
@@ -152,29 +157,40 @@ function initScene() {
 
   function onSelectEnd() {
     this.userData.isSelecting = false
+    
+    if (this.userData.name === 'controller1' && reticle.visible) {
+      userGroup.position.x = reticle.position.x
+      userGroup.position.y = reticle.position.y
+      resetUserGroupPositions()
+      
+    }
   }
 
   controller1 = renderer.xr.getController(0)
+  controller1.userData.name = 'controller1'
   controller1.addEventListener('selectstart', onSelectStart)
   controller1.addEventListener('selectend', onSelectEnd)
+  controller1.position.set(0.5, 1.5, -1)
   // controller1.addEventListener('connected', function (event) {
   //   this.add(buildController(event.data))
   // })
   // controller1.addEventListener('disconnected', function () {
   //   this.remove(this.children[0])
   // })
-  scene.add(controller1)
+  // scene.add(controller1)
 
   controller2 = renderer.xr.getController(1)
+  controller2.userData.name = 'controller2'
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
+  controller2.position.set(-0.5, 1.5, -1)
   // controller2.addEventListener('connected', function (event) {
   //   this.add(buildController(event.data))
   // })
   // controller2.addEventListener('disconnected', function () {
   //   this.remove(this.children[0])
   // })
-  scene.add(controller2)
+  // scene.add(controller2)
   
   // The XRControllerModelFactory will automatically fetch controller models
   // that match what the user is holding as closely as possible. The models
@@ -200,7 +216,13 @@ function initScene() {
   controller1.add( line.clone() );
   controller2.add( line.clone() );
 
-  
+  // UserGroup
+  userGroup = new THREE.Group();
+  userGroup.position.set(0,0,0);
+  userGroup.add(camera);
+  userGroup.add(controller1)
+  userGroup.add(controller2)
+  scene.add(userGroup);
   
   // Stats
   stats = new Stats()
@@ -303,6 +325,7 @@ function initWater() {
   meshRay = new THREE.Mesh(geometryRay, new THREE.MeshBasicMaterial({ color: 0xffffff, visible: false }))
   meshRay.rotation.x = -Math.PI / 2
   meshRay.scale.set(globalScale, globalScale, globalScale)
+  meshRay.position.y = 0.2;
   meshRay.matrixAutoUpdate = false
   meshRay.updateMatrix()
   meshRay.name = 'meshRay'
@@ -651,7 +674,8 @@ function getIntersections( controller ) {
   raycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
   raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
 
-  return raycaster.intersectObjects( meshRay );
+  // return raycaster.intersectObjects( scene.children );
+  return raycaster.intersectObjects( [meshRay] );
 
 }
 
@@ -666,10 +690,8 @@ function intersectObjects( controller ) {
 
     const intersection = intersections[ 0 ]
 
-    const object = intersection.object
     reticle.visible = true
-    reticle.position = intersection.position
-
+    reticle.position.copy(intersection.point)
     line.scale.z = intersection.distance
 
   } else {
@@ -678,6 +700,12 @@ function intersectObjects( controller ) {
     reticle.visible = false
   }
 
+}
+
+function resetUserGroupPositions() {
+  camera.position.set(0, 1.6, 0)
+  controller1.position.set(0.5, 1.5, -1)
+  controller2.position.set(-0.5, 1.5, -1)
 }
 
 function animate() {
