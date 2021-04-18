@@ -725,22 +725,21 @@ function buildController(data) {
   }
 }
 
-function getIntersections( controller ) {
+function getIntersections( controller, objectsArray ) {
 
   tempMatrix.identity().extractRotation( controller.matrixWorld );
 
   raycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
   raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
 
-  // return raycaster.intersectObjects( scene.children );
-  return raycaster.intersectObjects( [meshRay] );
+  return raycaster.intersectObjects(objectsArray);
 
 }
 
 function intersectObjects( controller ) {
 
   const line = controller.getObjectByName( 'line' )
-  const intersections = getIntersections( controller )
+  const intersections = getIntersections( controller, [meshRay] )
 
   if ( intersections.length > 0 ) {
 
