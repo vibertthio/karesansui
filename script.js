@@ -733,7 +733,7 @@ function getIntersections( controller ) {
   raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
 
   // return raycaster.intersectObjects( scene.children );
-  return raycaster.intersectObjects( [meshRay, rock] );
+  return raycaster.intersectObjects( [meshRay] );
 
 }
 
