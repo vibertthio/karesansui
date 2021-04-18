@@ -34,6 +34,7 @@ let camera, scene, renderer, controls
 let controller1, controller2
 let controllerGrip1, controllerGrip2
 
+let userGroup
 let mouseMoved = false
 const mouseCoords = new THREE.Vector2()
 const raycaster = new THREE.Raycaster()
@@ -46,7 +47,7 @@ let globalScale = 0.005
 let waterMesh
 let meshRay
 let reticle
-let selectingRock
+let rockReticle
 
 let gpuCompute
 let heightmapVariable
@@ -222,6 +223,14 @@ function initVRControllers() {
   // controllers
   function onSelectStart() {
     this.userData.isSelecting = true
+    
+    if (this.userData.name === 'controller2') {
+      const intersections = getIntersections(this, [rock])
+      if (intersections.length > 0) {
+        rockReticle.visible = true
+      }
+      
+    }
   }
 
   function onSelectEnd() {
@@ -234,7 +243,11 @@ function initVRControllers() {
     }
 
     if (this.userData.name === 'controller2') {
-      changeLayout()
+      if (rockReticle.visible) {
+        rockReticle.visible = false
+      } else {
+        changeLayout()  
+      }
     }
   }
 
@@ -561,30 +574,35 @@ function initAnimations() {
 }
 
 function initReticle() {
-  const r = new THREE.IcosahedronGeometry(0.05, 8)
-  const recticleG = new THREE.MeshStandardMaterial({
+  const rg = new THREE.IcosahedronGeometry(0.05, 8)
+  const rm = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     roughness: 0.7,
     metalness: 0.0,
   })
-  reticle = new THREE.Mesh(recticleG, material)
+  reticle = new THREE.Mesh(rg, rm)
 
   reticle.castShadow = true
   reticle.receiveShadow = true
-  reticle.position.x = 0
-  reticle.position.y = 0.5
-  reticle.position.z = -1
+  reticle.position.set(0, 0, 0)
   reticle.visible = false
 
   scene.add(reticle)
   
-  const geometry = new THREE.IcosahedronGeometry(0.05, 8)
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
+  
+  const g = new THREE.IcosahedronGeometry(0.1, 8)
+  const m = new THREE.MeshStandardMaterial({
+    color: 0xff00ff,
     roughness: 0.7,
     metalness: 0.0,
   })
-  scene.add(selectingRock)
+  rockReticle = new THREE.Mesh(g, m)
+  rockReticle.castShadow = true
+  rockReticle.receiveShadow = true
+  rockReticle.position.set(0, 1, 0)
+  rockReticle.visible = false
+  
+  scene.add(rockReticle)
   
 }
 
