@@ -140,8 +140,8 @@ function initScene() {
   sun1.shadow.camera.far = 500
   scene.add(sun1)
 
-  const sun2 = new THREE.DirectionalLight(0x444444, 0.6)
-  sun2.position.set(-2, 4, -3)
+  const sun2 = new THREE.DirectionalLight(0x444444, 0.3)
+  sun2.position.set(-1, 5, -2)
   sun2.castShadow = true
   scene.add(sun2)
 
@@ -149,9 +149,9 @@ function initScene() {
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = true
-  // renderer.shadowMap.type = THREE.VSMShadowMap;
-  // renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.xr.enabled = true
+  // renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement)
 
   stats = new Stats()
@@ -261,7 +261,7 @@ function initScene() {
   const gui = new GUI()
 
   const effectController = {
-    rockRotationSpeed: 0.0,
+    rockRotationSpeed: 0.1,
   }
 
   const valuesChanger = () => {
