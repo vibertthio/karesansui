@@ -96,15 +96,17 @@ animate()
 
 function init() {
   initScene()
+  initControllers()
+  initNotVRControl()
   initLayout()
   
   // meshes
   initLoadingManager()
   initHeightMap()
   initWater()
-  loadModels()
+  initModels()
   
-  initControl()
+  
   initAnimations()
   initReticle()
 }
@@ -144,6 +146,16 @@ function initScene() {
   sun2.position.set(-1, 5, -2)
   sun2.castShadow = true
   scene.add(sun2)
+  
+  const frame = new THREE.Mesh(
+    new THREE.TorusGeometry(2, .1, 3, 4),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.7,
+      metalness: 0.0
+    })
+  );
+  scene.add( frame );
 
   renderer = new THREE.WebGLRenderer()
   renderer.setPixelRatio(window.devicePixelRatio)
@@ -221,24 +233,28 @@ function initScene() {
   controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2))
   scene.add(controllerGrip2)
   
-  
-  const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, - 1 ) ] );
-  const line = new THREE.Line( geometry );
-  line.name = 'line';
-  line.scale.z = 5;
 
-  controller1.add( line.clone() );
-  controller2.add( line.clone() );
+  const line = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3( 0, 0, 0 ),
+      new THREE.Vector3( 0, 0, - 1 ),
+    ])
+  )
+  line.name = 'line'
+  line.scale.z = 5
+
+  controller1.add( line.clone() )
+  controller2.add( line.clone() )
 
   // UserGroup
-  userGroup = new THREE.Group();
-  userGroup.position.set(0,0,0);
-  userGroup.add(camera);
+  userGroup = new THREE.Group()
+  userGroup.position.set(0,0,0)
+  userGroup.add(camera)
   userGroup.add(controllerGrip1)
   userGroup.add(controller1)
   userGroup.add(controllerGrip2)
   userGroup.add(controller2)
-  scene.add(userGroup);
+  scene.add(userGroup)
   
   // Stats
   stats = new Stats()
@@ -282,6 +298,33 @@ function initScene() {
   valuesChanger()
 }
 
+function initControllers() {
+  
+}
+
+function initNotVRControl() {
+  // OrbitControls
+  controls = new OrbitControls(camera, renderer.domElement)
+  // controls.maxDistance = 1500;
+  // controls.minDistance = 600;
+  controls.maxPolarAngle = Math.PI * 0.45;
+}
+
+function initLayout() {
+  // Circular Wave
+  circularWavePosition = [
+    new THREE.Vector3(lerp(0, 1, 0.2, 0.25, Math.random()), lerp(0, 1, 0.1, 0.7, Math.random()), 1.0),
+    new THREE.Vector3(lerp(0, 1, 0.7, 0.9, Math.random()), lerp(0, 1, 0.3, 0.5, Math.random()), 1.0),
+    new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0),
+  ]
+  circularWaveRadius = [new THREE.Vector2(0.2, 0.05), new THREE.Vector2(0.1, 0.0), new THREE.Vector2(0.3, 0.03)]
+
+  const index = 2
+  const rockX = lerp(0, 1.0, -BOUNDS_HALF, BOUNDS_HALF, circularWavePosition[index].x)
+  const rockZ = lerp(0, 1.0, BOUNDS_HALF, -BOUNDS_HALF, circularWavePosition[index].y)
+  rockPosition = new THREE.Vector3(rockX * globalScale, rockPositionY * globalScale, rockZ * globalScale)
+}
+
 function initLoadingManager() {
   manager = new THREE.LoadingManager()
   manager.onProgress = (item, loaded, total) => {
@@ -295,69 +338,6 @@ function initLoadingManager() {
     console.log('There was an error loading ' + url)
   };
   
-}
-
-function initWater() {
-  // texture
-  
-
-  const textureLoader = new THREE.TextureLoader(manager)
-  const texture = textureLoader.load('./assets/sand.jpg')
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(100, 100)
-  texture.updateMatrix()
-
-  const geometry = new THREE.PlaneGeometry(BOUNDS, BOUNDS, WIDTH - 1, WIDTH - 1)
-
-  // material: make a THREE.ShaderMaterial clone of THREE.MeshPhongMaterial, with customized vertex shader
-  const material = new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.merge([
-      THREE.UniformsLib.lights,
-      THREE.ShaderLib['phong'].uniforms,
-      {
-        shininess: { value: 0 },
-        heightmap: { value: null },
-      },
-    ]),
-    defines: {
-      USE_MAP: '',
-      WIDTH: WIDTH.toFixed(1),
-      BOUNDS: BOUNDS.toFixed(1),
-    },
-    vertexShader: waterVertexShader,
-    fragmentShader: THREE.ShaderChunk['meshphong_frag'],
-    lights: true,
-  })
-
-  // Sets the uniforms with the material values
-  material.map = texture
-  material.uniforms['map'].value = texture
-  material.uniforms['specular'].value = new THREE.Color(0x010101)
-  material.uniforms['heightmap'].value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture
-
-  waterUniforms = material.uniforms
-
-  waterMesh = new THREE.Mesh(geometry, material)
-  waterMesh.scale.set(globalScale, globalScale, globalScale)
-  waterMesh.rotation.x = -Math.PI / 2
-  waterMesh.castShadow = true
-  waterMesh.receiveShadow = true
-  waterMesh.material.needsUpdate = true
-  waterMesh.matrixAutoUpdate = false
-  waterMesh.updateMatrix()
-
-  scene.add(waterMesh)
-
-  // THREE.Mesh just for mouse raycasting
-  const geometryRay = new THREE.PlaneGeometry(BOUNDS, BOUNDS, 1, 1)
-  meshRay = new THREE.Mesh(geometryRay, new THREE.MeshBasicMaterial({ color: 0xffffff, visible: false }))
-  meshRay.rotation.x = -Math.PI / 2
-  meshRay.scale.set(globalScale, globalScale, globalScale)
-  meshRay.position.y = 0.2;
-  meshRay.matrixAutoUpdate = false
-  meshRay.updateMatrix()
-  meshRay.name = 'meshRay'
-  scene.add(meshRay)
 }
 
 function initHeightMap() {
@@ -432,27 +412,106 @@ function initHeightMap() {
   })
 }
 
-function initLayout() {
-  // Circular Wave
-  circularWavePosition = [
-    new THREE.Vector3(lerp(0, 1, 0.2, 0.25, Math.random()), lerp(0, 1, 0.1, 0.7, Math.random()), 1.0),
-    new THREE.Vector3(lerp(0, 1, 0.7, 0.9, Math.random()), lerp(0, 1, 0.3, 0.5, Math.random()), 1.0),
-    new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0),
-  ]
-  circularWaveRadius = [new THREE.Vector2(0.2, 0.05), new THREE.Vector2(0.1, 0.0), new THREE.Vector2(0.3, 0.03)]
+function initWater() {
+  // texture
+  
 
-  const index = 2
-  const rockX = lerp(0, 1.0, -BOUNDS_HALF, BOUNDS_HALF, circularWavePosition[index].x)
-  const rockZ = lerp(0, 1.0, BOUNDS_HALF, -BOUNDS_HALF, circularWavePosition[index].y)
-  rockPosition = new THREE.Vector3(rockX * globalScale, rockPositionY * globalScale, rockZ * globalScale)
+  const textureLoader = new THREE.TextureLoader(manager)
+  const texture = textureLoader.load('./assets/sand.jpg')
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(100, 100)
+  texture.updateMatrix()
+
+  const geometry = new THREE.PlaneGeometry(BOUNDS, BOUNDS, WIDTH - 1, WIDTH - 1)
+
+  // material: make a THREE.ShaderMaterial clone of THREE.MeshPhongMaterial, with customized vertex shader
+  const material = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.merge([
+      THREE.UniformsLib.lights,
+      THREE.ShaderLib['phong'].uniforms,
+      {
+        shininess: { value: 0 },
+        heightmap: { value: null },
+      },
+    ]),
+    defines: {
+      USE_MAP: '',
+      WIDTH: WIDTH.toFixed(1),
+      BOUNDS: BOUNDS.toFixed(1),
+    },
+    vertexShader: waterVertexShader,
+    fragmentShader: THREE.ShaderChunk['meshphong_frag'],
+    lights: true,
+  })
+
+  // Sets the uniforms with the material values
+  material.map = texture
+  material.uniforms['map'].value = texture
+  material.uniforms['specular'].value = new THREE.Color(0x010101)
+  material.uniforms['heightmap'].value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture
+
+  waterUniforms = material.uniforms
+
+  waterMesh = new THREE.Mesh(geometry, material)
+  waterMesh.scale.set(globalScale, globalScale, globalScale)
+  waterMesh.rotation.x = -Math.PI / 2
+  waterMesh.castShadow = true
+  waterMesh.receiveShadow = true
+  waterMesh.material.needsUpdate = true
+  waterMesh.matrixAutoUpdate = false
+  waterMesh.updateMatrix()
+
+  scene.add(waterMesh)
+
+  // THREE.Mesh just for mouse raycasting
+  const geometryRay = new THREE.PlaneGeometry(BOUNDS, BOUNDS, 1, 1)
+  meshRay = new THREE.Mesh(geometryRay, new THREE.MeshBasicMaterial({ color: 0xffffff, visible: false }))
+  meshRay.rotation.x = -Math.PI / 2
+  meshRay.scale.set(globalScale, globalScale, globalScale)
+  meshRay.position.y = 0.2;
+  meshRay.matrixAutoUpdate = false
+  meshRay.updateMatrix()
+  meshRay.name = 'meshRay'
+  scene.add(meshRay)
 }
 
-function initControl() {
-  // OrbitControls
-  controls = new OrbitControls(camera, renderer.domElement)
-  // controls.maxDistance = 1500;
-  // controls.minDistance = 600;
-  // controls.maxPolarAngle = Math.PI * 0.35;
+function initModels() {
+  const onProgress = (xhr) => {
+    if (xhr.lengthComputable) {
+      const percentComplete = (xhr.loaded / xhr.total) * 100
+      console.log(`[rock.obj loaded..${Math.round(percentComplete, 2)}%]`)
+    }
+  }
+  const onError = (err) => {
+    console.log('Error while loading rock model: ', err)
+  }
+  
+  const onLoadedObj = (object) => {
+    rock = object
+    rock.castShadow = true
+    rock.receiveShadow = true
+
+    const { children } = rock
+    children[0].castShadow = true
+    children[0].receiveShadow = true
+
+    scene.add(rock)
+    rock.scale.set(rockScale, rockScale, rockScale)
+    rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z)
+  }
+  
+  const mtlLoader = new MTLLoader(manager)
+  mtlLoader.load(rockMtl, (materials) => {
+    materials.preload()
+    const objLoader = new OBJLoader(manager)
+    objLoader.setMaterials(materials)
+    objLoader.load(
+      rockObj,
+      onLoadedObj,
+      onProgress,
+      onError,
+    )
+  })
 }
 
 function initAnimations() {
@@ -565,53 +624,6 @@ function changeGridUnit() {
 function toggleWireframe() {
   waterMesh.material.wireframe = !waterMesh.material.wireframe
   waterMesh.material.needsUpdate = true
-}
-
-function isSafari() {
-  return !!navigator.userAgent.match(/Safari/i) && !navigator.userAgent.match(/Chrome/i)
-}
-
-function loadModels() {
-  const onProgress = (xhr) => {
-    if (xhr.lengthComputable) {
-      const percentComplete = (xhr.loaded / xhr.total) * 100
-      console.log(`[rock.obj loaded..${Math.round(percentComplete, 2)}%]`)
-    }
-  }
-  const onError = (err) => {
-    console.log('Error while loading rock model: ', err)
-  }
-  
-  const onLoadedObj = (object) => {
-    rock = object
-    rock.castShadow = true
-    rock.receiveShadow = true
-
-    const { children } = rock
-    children[0].castShadow = true
-    children[0].receiveShadow = true
-
-    initModel()
-  }
-  
-  const mtlLoader = new MTLLoader(manager)
-  mtlLoader.load(rockMtl, (materials) => {
-    materials.preload()
-    const objLoader = new OBJLoader(manager)
-    objLoader.setMaterials(materials)
-    objLoader.load(
-      rockObj,
-      onLoadedObj,
-      onProgress,
-      onError,
-    )
-  })
-}
-
-function initModel() {
-  scene.add(rock)
-  rock.scale.set(rockScale, rockScale, rockScale)
-  rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z)
 }
 
 function fillTexture(texture) {
@@ -733,8 +745,6 @@ function resetUserGroupPositions() {
 
 function animate() {
   renderer.setAnimationLoop(render)
-
-  
   render()
 }
 
@@ -747,11 +757,6 @@ function sceneUpdate(deltaTime, elapsedTime) {
   if (rock) {
     rock.rotation.y += deltaTime * rockRotationSpeed
   }
-}
-
-function lerp(low, high, from, to, v) {
-  const ratio = (v - low) / (high - low)
-  return from + (to - from) * ratio
 }
 
 function render() {
@@ -776,4 +781,15 @@ function render() {
   
   
   stats.end()
+}
+
+/* helper function */
+
+function lerp(low, high, from, to, v) {
+  const ratio = (v - low) / (high - low)
+  return from + (to - from) * ratio
+}
+
+function isSafari() {
+  return !!navigator.userAgent.match(/Safari/i) && !navigator.userAgent.match(/Chrome/i)
 }
