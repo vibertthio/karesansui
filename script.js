@@ -575,30 +575,33 @@ function loadModels() {
   const onProgress = (xhr) => {
     if (xhr.lengthComputable) {
       const percentComplete = (xhr.loaded / xhr.total) * 100
-      console.log(`downloading..${Math.round(percentComplete, 2)}%`)
+      console.log(`[rock.obj loaded..${Math.round(percentComplete, 2)}%]`)
     }
   }
+  const onError = (err) => {
+    console.log('Error while loading rock model: ', err)
+  }
+  
+  const onLoadedObj = (object) => {
+    rock = object
+    rock.castShadow = true
+    rock.receiveShadow = true
 
-  const onError = () => {}
+    const { children } = rock
+    children[0].castShadow = true
+    children[0].receiveShadow = true
+
+    initModel()
+  }
+  
   const mtlLoader = new MTLLoader(manager)
   mtlLoader.load(rockMtl, (materials) => {
     materials.preload()
     const objLoader = new OBJLoader(manager)
     objLoader.setMaterials(materials)
-    // objLoader.setPath( 'obj/male02/' );
     objLoader.load(
       rockObj,
-      (object) => {
-        rock = object
-        rock.castShadow = true
-        rock.receiveShadow = true
-
-        const { children } = rock
-        children[0].castShadow = true
-        children[0].receiveShadow = true
-
-        initModel()
-      },
+      onLoadedObj,
       onProgress,
       onError,
     )
@@ -707,8 +710,6 @@ function intersectObjects( controller ) {
   const intersections = getIntersections( controller )
 
   if ( intersections.length > 0 ) {
-
-    console.log(intersections)
 
     const intersection = intersections[ 0 ]
 
