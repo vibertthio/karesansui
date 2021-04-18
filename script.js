@@ -27,7 +27,7 @@ const WIDTH = 512
 const BOUNDS = 1024
 const BOUNDS_HALF = BOUNDS * 0.5
 
-let container, stats
+let container, splash, stats
 let camera, scene, renderer, controls
 let controller1, controller2
 let controllerGrip1, controllerGrip2
@@ -88,23 +88,33 @@ let circularWaveRadius
 let masterScaleAni
 let layoutChanging = false
 
+// load progress
+let manager
+
 init()
 animate()
 
 function init() {
   initScene()
   initLayout()
+  
+  // meshes
+  initLoadingManager()
   initHeightMap()
   initWater()
-  initControl()
   loadModels()
+  
+  initControl()
   initAnimations()
   initReticle()
 }
 
 function initScene() {
   container = document.createElement('div')
+  container.id = 'container'
   document.body.appendChild(container)
+  
+  splash = document.getElementById('splash')
 
   
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000)
@@ -130,8 +140,8 @@ function initScene() {
   sun1.shadow.camera.far = 500
   scene.add(sun1)
 
-  const sun2 = new THREE.DirectionalLight(0x444444, 0.6)
-  sun2.position.set(-2, 4, -3)
+  const sun2 = new THREE.DirectionalLight(0x444444, 0.3)
+  sun2.position.set(-1, 5, -2)
   sun2.castShadow = true
   scene.add(sun2)
 
@@ -139,9 +149,9 @@ function initScene() {
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = true
-  // renderer.shadowMap.type = THREE.VSMShadowMap;
-  // renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.xr.enabled = true
+  // renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement)
 
   stats = new Stats()
@@ -251,7 +261,7 @@ function initScene() {
   const gui = new GUI()
 
   const effectController = {
-    rockRotationSpeed: 0.0,
+    rockRotationSpeed: 0.1,
   }
 
   const valuesChanger = () => {
@@ -272,12 +282,24 @@ function initScene() {
   valuesChanger()
 }
 
+function initLoadingManager() {
+  manager = new THREE.LoadingManager()
+  manager.onProgress = (item, loaded, total) => {
+    console.log(item, `${loaded} / ${total}`)
+  }
+  manager.onLoad = () => {
+	  console.log('Loading complete!')
+    splash.style.display = 'none'
+  }
+  manager.onError = (url) => {
+    console.log('There was an error loading ' + url)
+  };
+  
+}
+
 function initWater() {
   // texture
-  const manager = new THREE.LoadingManager()
-  manager.onProgress = (item, loaded, total) => {
-    console.log(item, loaded, total)
-  }
+  
 
   const textureLoader = new THREE.TextureLoader(manager)
   const texture = textureLoader.load('./assets/sand.jpg')
@@ -553,36 +575,33 @@ function loadModels() {
   const onProgress = (xhr) => {
     if (xhr.lengthComputable) {
       const percentComplete = (xhr.loaded / xhr.total) * 100
-      console.log(`downloading..${Math.round(percentComplete, 2)}%`)
+      console.log(`[rock.obj loaded..${Math.round(percentComplete, 2)}%]`)
     }
   }
+  const onError = (err) => {
+    console.log('Error while loading rock model: ', err)
+  }
+  
+  const onLoadedObj = (object) => {
+    rock = object
+    rock.castShadow = true
+    rock.receiveShadow = true
 
-  const onError = () => {}
-  const mtlLoader = new MTLLoader()
+    const { children } = rock
+    children[0].castShadow = true
+    children[0].receiveShadow = true
+
+    initModel()
+  }
+  
+  const mtlLoader = new MTLLoader(manager)
   mtlLoader.load(rockMtl, (materials) => {
     materials.preload()
-    const manager = new THREE.LoadingManager()
-    manager.onProgress = (item, loaded, total) => {
-      console.log(item, loaded, total)
-    }
     const objLoader = new OBJLoader(manager)
     objLoader.setMaterials(materials)
-    // objLoader.setPath( 'obj/male02/' );
     objLoader.load(
       rockObj,
-      (object) => {
-        rock = object
-        rock.castShadow = true
-        rock.receiveShadow = true
-
-        const { children } = rock
-        children[0].castShadow = true
-        children[0].receiveShadow = true
-
-        console.log('rock model', rock)
-
-        initModel()
-      },
+      onLoadedObj,
       onProgress,
       onError,
     )
@@ -692,8 +711,6 @@ function intersectObjects( controller ) {
 
   if ( intersections.length > 0 ) {
 
-    console.log(intersections)
-
     const intersection = intersections[ 0 ]
 
     reticle.visible = true
@@ -717,8 +734,8 @@ function resetUserGroupPositions() {
 function animate() {
   renderer.setAnimationLoop(render)
 
+  
   render()
-  stats.update()
 }
 
 function sceneUpdate(deltaTime, elapsedTime) {
@@ -739,6 +756,8 @@ function lerp(low, high, from, to, v) {
 
 function render() {
   
+  stats.begin()
+  
   intersectObjects(controller1)
   
   // TWEEN
@@ -754,4 +773,7 @@ function render() {
 
   // Render
   renderer.render(scene, camera)
+  
+  
+  stats.end()
 }
