@@ -96,7 +96,7 @@ animate()
 
 function init() {
   initScene()
-  initControllers()
+  initVRControllers()
   initNotVRControl()
   initLayout()
   
@@ -148,13 +148,19 @@ function initScene() {
   scene.add(sun2)
   
   const frame = new THREE.Mesh(
-    new THREE.TorusGeometry(2, .1, 3, 4),
+    new THREE.TorusGeometry(BOUNDS * globalScale / Math.pow(2, 1/2), .1, 3, 4),
     new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.7,
       metalness: 0.0
     })
   );
+  frame.rotation.x = -Math.PI / 2
+  frame.rotation.z = Math.PI / 4
+  
+  frame.castShadow = true
+  frame.receiveShadow = true
+  
   scene.add( frame );
 
   renderer = new THREE.WebGLRenderer()
@@ -169,6 +175,51 @@ function initScene() {
   stats = new Stats()
   container.appendChild(stats.dom)
 
+  
+  // Stats
+  stats = new Stats()
+  container.appendChild(stats.dom)
+
+  container.style.touchAction = 'none'
+  container.addEventListener('pointermove', onPointerMove)
+
+  document.addEventListener('keydown', function ({ key }) {
+    if (key === ' ') {
+      changeLayout()
+    }
+  })
+
+  // window resize
+  window.addEventListener('resize', onWindowResize)
+
+  
+  // data.gui
+  const gui = new GUI()
+
+  const effectController = {
+    rockRotationSpeed: 0.1,
+  }
+
+  const valuesChanger = () => {
+    rockRotationSpeed = effectController.rockRotationSpeed
+  }
+
+  gui.add(effectController, 'rockRotationSpeed', -1.0, 1.0, 0.02).onChange(valuesChanger)
+
+  const buttons = {
+    changeLayout: () => {
+      changeLayout()
+    },
+    toggleWireframe: false,
+  }
+  gui.add(buttons, 'changeLayout')
+  gui.add(buttons, 'toggleWireframe').onChange(toggleWireframe)
+
+  valuesChanger()
+}
+
+function initVRControllers() {
+  
   container.appendChild(VRButton.createButton(renderer))
 
   
@@ -255,51 +306,6 @@ function initScene() {
   userGroup.add(controllerGrip2)
   userGroup.add(controller2)
   scene.add(userGroup)
-  
-  // Stats
-  stats = new Stats()
-  container.appendChild(stats.dom)
-
-  container.style.touchAction = 'none'
-  container.addEventListener('pointermove', onPointerMove)
-
-  document.addEventListener('keydown', function ({ key }) {
-    if (key === ' ') {
-      changeLayout()
-    }
-  })
-
-  // window resize
-  window.addEventListener('resize', onWindowResize)
-
-  
-  // data.gui
-  const gui = new GUI()
-
-  const effectController = {
-    rockRotationSpeed: 0.1,
-  }
-
-  const valuesChanger = () => {
-    rockRotationSpeed = effectController.rockRotationSpeed
-  }
-
-  gui.add(effectController, 'rockRotationSpeed', -1.0, 1.0, 0.02).onChange(valuesChanger)
-
-  const buttons = {
-    changeLayout: () => {
-      changeLayout()
-    },
-    toggleWireframe: false,
-  }
-  gui.add(buttons, 'changeLayout')
-  gui.add(buttons, 'toggleWireframe').onChange(toggleWireframe)
-
-  valuesChanger()
-}
-
-function initControllers() {
-  
 }
 
 function initNotVRControl() {
@@ -468,7 +474,7 @@ function initWater() {
   meshRay = new THREE.Mesh(geometryRay, new THREE.MeshBasicMaterial({ color: 0xffffff, visible: false }))
   meshRay.rotation.x = -Math.PI / 2
   meshRay.scale.set(globalScale, globalScale, globalScale)
-  meshRay.position.y = 0.2;
+  meshRay.position.y = 0.1;
   meshRay.matrixAutoUpdate = false
   meshRay.updateMatrix()
   meshRay.name = 'meshRay'
