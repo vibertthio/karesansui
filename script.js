@@ -148,12 +148,13 @@ function initScene() {
   
   const frameGeo = new THREE.TorusGeometry(BOUNDS * globalScale / 1.414, .08, 6, 4)
   const texture = (new THREE.TextureLoader(manager)).load('https://threejsfundamentals.org/threejs/lessons/resources/images/compressed-but-large-wood-texture.jpg')
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set( 100, 4 );
+  texture.wrapS = THREE.MirroredRepeatWrapping
+  texture.wrapT = THREE.MirroredRepeatWrapping
+  texture.rotation = Math.PI / 2
+  texture.repeat.set( 2, 20 )
   const frameMtl = new THREE.MeshStandardMaterial({
     // color: 0x3b2f2f,
-    roughness: 0.7,
+    roughness: 0.9,
     metalness: 0.0,
     map: texture,
   })
@@ -423,11 +424,9 @@ function initHeightMap() {
 }
 
 function initWater() {
-  // texture
   
-
-  const textureLoader = new THREE.TextureLoader(manager)
-  const texture = textureLoader.load('./assets/sand.jpg')
+  // texture
+  const texture = (new THREE.TextureLoader(manager)).load('./assets/sand.jpg')
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(100, 100)
   texture.updateMatrix()
