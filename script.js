@@ -97,7 +97,7 @@ animate()
 function init() {
   initLoadingManager()
   initScene()
-  initStatsAndGUI()
+  // initStatsAndGUI()
   initVRControllers()
   initReticle()
   initNotVRControl()
@@ -107,7 +107,7 @@ function init() {
   initWater()
   initModels()
   
-  initAnimations()
+  // initAnimations()
 }
 
 function initScene() {
@@ -168,7 +168,7 @@ function initScene() {
   frame.castShadow = true
   frame.receiveShadow = true
   
-  scene.add( frame );
+  // scene.add( frame );
 
   renderer = new THREE.WebGLRenderer()
   renderer.setPixelRatio(window.devicePixelRatio)
@@ -181,9 +181,6 @@ function initScene() {
 
   // window resize
   window.addEventListener('resize', onWindowResize)
-  
-  stats = new Stats()
-  container.appendChild(stats.dom)
 }
 
 function initStatsAndGUI() {
