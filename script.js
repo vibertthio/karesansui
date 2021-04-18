@@ -174,7 +174,7 @@ function initScene() {
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  // renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.xr.enabled = true
   // renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement)
@@ -733,7 +733,7 @@ function getIntersections( controller ) {
   raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
 
   // return raycaster.intersectObjects( scene.children );
-  return raycaster.intersectObjects( [meshRay] );
+  return raycaster.intersectObjects( [meshRay, rock] );
 
 }
 
