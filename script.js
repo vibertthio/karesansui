@@ -151,12 +151,14 @@ function initScene() {
   texture.wrapS = THREE.MirroredRepeatWrapping
   texture.wrapT = THREE.MirroredRepeatWrapping
   texture.rotation = Math.PI / 2
-  texture.repeat.set( 2, 20 )
+  texture.repeat.set(2, 20)
   const frameMtl = new THREE.MeshStandardMaterial({
-    // color: 0x3b2f2f,
     roughness: 0.9,
     metalness: 0.0,
     map: texture,
+    colorDiffuse: [0.1137, 0.1137, 0.1137],
+    colorAmbient: [0.1137, 0.1137, 0.1137],
+    colorSpecular: [0.9000, 0.9000, 0.9000],
   })
   frameMtl.color.convertSRGBToLinear()
   const frame = new THREE.Mesh(frameGeo, frameMtl)
@@ -534,6 +536,8 @@ function initAnimations() {
   // const sandEasingIn = TWEEN.Easing.Back.In;
   // const sandEasingOut = TWEEN.Easing.Back.Out;
 
+  const threshold = (rockPositionY * globalScale - rockPositionYDisplace * globalScale) * 0.5
+  
   const rockScaleAniBack = new TWEEN.Tween(scale)
     .easing(rockEasingOut)
     .to({ value: 1 }, 400)
@@ -541,6 +545,10 @@ function initAnimations() {
       const scl = rockScale * scale.value
       rock.scale.set(scl, scl, scl)
       rock.position.setY(lerp(1, 0, rockPositionY * globalScale, rockPositionYDisplace * globalScale, scale.value))
+      
+      if (rockPositionY * globalScale - rock.position.y < threshold) {
+        rock.visible = true
+      }
     })
 
   rockScaleAni = new TWEEN.Tween(scale)
@@ -550,6 +558,10 @@ function initAnimations() {
       const scl = rockScale * (scale.value * 0.5 + 0.5)
       rock.scale.set(scl, scl, scl)
       rock.position.setY(lerp(1, 0, rockPositionY * globalScale, rockPositionYDisplace * globalScale, scale.value))
+    
+      if (rockPositionY * globalScale - rock.position.y > threshold) {
+        rock.visible = false
+      }
     })
     .onComplete(() => {
       rock.position.setX(rockPosition.x)
