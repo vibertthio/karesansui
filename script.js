@@ -88,16 +88,23 @@ let circularWaveRadius
 let masterScaleAni
 let layoutChanging = false
 
+// load progress
+let manager
+
 init()
 animate()
 
 function init() {
   initScene()
   initLayout()
+  
+  // meshes
+  initLoadingManager()
   initHeightMap()
   initWater()
-  initControl()
   loadModels()
+  
+  initControl()
   initAnimations()
   initReticle()
 }
@@ -275,12 +282,24 @@ function initScene() {
   valuesChanger()
 }
 
+function initLoadingManager() {
+  manager = new THREE.LoadingManager()
+  manager.onProgress = (item, loaded, total) => {
+    console.log(item, `${loaded} / ${total}`)
+  }
+  manager.onLoad = () => {
+	  console.log('Loading complete!')
+    splash.style.display = 'none'
+  }
+  manager.onError = (url) => {
+    console.log('There was an error loading ' + url)
+  };
+  
+}
+
 function initWater() {
   // texture
-  const manager = new THREE.LoadingManager()
-  manager.onProgress = (item, loaded, total) => {
-    console.log(item, loaded, total)
-  }
+  
 
   const textureLoader = new THREE.TextureLoader(manager)
   const texture = textureLoader.load('./assets/sand.jpg')
@@ -561,13 +580,9 @@ function loadModels() {
   }
 
   const onError = () => {}
-  const mtlLoader = new MTLLoader()
+  const mtlLoader = new MTLLoader(manager)
   mtlLoader.load(rockMtl, (materials) => {
     materials.preload()
-    const manager = new THREE.LoadingManager()
-    manager.onProgress = (item, loaded, total) => {
-      console.log(item, loaded, total)
-    }
     const objLoader = new OBJLoader(manager)
     objLoader.setMaterials(materials)
     // objLoader.setPath( 'obj/male02/' );
@@ -581,8 +596,6 @@ function loadModels() {
         const { children } = rock
         children[0].castShadow = true
         children[0].receiveShadow = true
-
-        console.log('rock model', rock)
 
         initModel()
       },
