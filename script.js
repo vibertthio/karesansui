@@ -46,6 +46,8 @@ let globalScale = 0.005
 let waterMesh
 let meshRay
 let reticle
+let selectingRock
+
 let gpuCompute
 let heightmapVariable
 let waterUniforms
@@ -71,8 +73,6 @@ let rockRotateAni
 let rockAngle = 0
 const rockRotate = { value: 0 }
 
-// User
-let userGroup
 
 // Circular Wave
 let circularWavePosition = [
@@ -561,13 +561,13 @@ function initAnimations() {
 }
 
 function initReticle() {
-  const geometry = new THREE.IcosahedronGeometry(0.05, 8)
-  const material = new THREE.MeshStandardMaterial({
+  const r = new THREE.IcosahedronGeometry(0.05, 8)
+  const recticleG = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     roughness: 0.7,
     metalness: 0.0,
   })
-  reticle = new THREE.Mesh(geometry, material)
+  reticle = new THREE.Mesh(recticleG, material)
 
   reticle.castShadow = true
   reticle.receiveShadow = true
@@ -577,6 +577,15 @@ function initReticle() {
   reticle.visible = false
 
   scene.add(reticle)
+  
+  const geometry = new THREE.IcosahedronGeometry(0.05, 8)
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.7,
+    metalness: 0.0,
+  })
+  scene.add(selectingRock)
+  
 }
 
 function changeLayout() {
