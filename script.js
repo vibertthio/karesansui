@@ -27,7 +27,7 @@ const WIDTH = 512
 const BOUNDS = 1024
 const BOUNDS_HALF = BOUNDS * 0.5
 
-let container, stats
+let container, splash, stats
 let camera, scene, renderer, controls
 let controller1, controller2
 let controllerGrip1, controllerGrip2
@@ -104,7 +104,10 @@ function init() {
 
 function initScene() {
   container = document.createElement('div')
+  container.id = 'container'
   document.body.appendChild(container)
+  
+  splash = document.getElementById('splash')
 
   
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000)
@@ -717,8 +720,8 @@ function resetUserGroupPositions() {
 function animate() {
   renderer.setAnimationLoop(render)
 
+  
   render()
-  stats.update()
 }
 
 function sceneUpdate(deltaTime, elapsedTime) {
@@ -739,6 +742,8 @@ function lerp(low, high, from, to, v) {
 
 function render() {
   
+  stats.begin()
+  
   intersectObjects(controller1)
   
   // TWEEN
@@ -754,4 +759,7 @@ function render() {
 
   // Render
   renderer.render(scene, camera)
+  
+  
+  stats.end()
 }
