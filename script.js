@@ -255,26 +255,12 @@ function initVRControllers() {
   controller1.addEventListener('selectstart', onSelectStart)
   controller1.addEventListener('selectend', onSelectEnd)
   controller1.position.set(0.5, 1.5, -1)
-  // controller1.addEventListener('connected', function (event) {
-  //   this.add(buildController(event.data))
-  // })
-  // controller1.addEventListener('disconnected', function () {
-  //   this.remove(this.children[0])
-  // })
-  // scene.add(controller1)
-
+  
   controller2 = renderer.xr.getController(1)
   controller2.userData.name = 'controller2'
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
   controller2.position.set(-0.5, 1.5, -1)
-  // controller2.addEventListener('connected', function (event) {
-  //   this.add(buildController(event.data))
-  // })
-  // controller2.addEventListener('disconnected', function () {
-  //   this.remove(this.children[0])
-  // })
-  // scene.add(controller2)
   
   // The XRControllerModelFactory will automatically fetch controller models
   // that match what the user is holding as closely as possible. The models
@@ -290,7 +276,6 @@ function initVRControllers() {
   controllerGrip2 = renderer.xr.getControllerGrip(1)
   controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2))
   scene.add(controllerGrip2)
-  
 
   const line = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints([
