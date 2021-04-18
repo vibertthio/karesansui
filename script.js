@@ -53,9 +53,6 @@ let readWaterLevelRenderTarget
 let readWaterLevelImage
 const waterNormal = new THREE.Vector3()
 
-const NUM_SPHERES = 5
-const spheres = []
-let spheresEnabled = false
 
 const simplex = new SimplexNoise()
 
@@ -65,7 +62,6 @@ const rockMtl = './models/rock/rock_1.mtl'
 let rock
 let mouseOnRock = false
 let rockRotationSpeed = 1.0
-// let draggingOnRock = false;
 let rockPosition
 const rockScale = 70 * globalScale
 const rockPositionY = -11
