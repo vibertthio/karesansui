@@ -96,7 +96,7 @@ void main()	{
   // Grid
   if (uGridUnit >= 2.0) {
     // Basic Waves
-    heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * localScale * uBackgroundWaveScale;
+    heightmapValue.x = pow(abs(sin(uv.x * 200.0)), 0.5) * localScale * uBackgroundWaveScale;
 
     float unit = 1.0 / floor(uGridUnit);
     float gridX = mod(uv.x / unit, 2.0);
