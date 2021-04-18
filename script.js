@@ -20,6 +20,8 @@ import smoothFragShader from './shaders/smooth.frag.js'
 import waterVertexShader from './shaders/water.vert.js'
 import waterLevelFragShader from './shaders/waterLevel.frag.js'
 
+console.log(THREE.REVISION)
+
 // Texture width for simulation
 const WIDTH = 512
 
