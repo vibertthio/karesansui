@@ -95,20 +95,19 @@ init()
 animate()
 
 function init() {
+  initLoadingManager()
   initScene()
+  initStatsAndGUI()
   initVRControllers()
+  initReticle()
   initNotVRControl()
   initLayout()
   
-  // meshes
-  initLoadingManager()
   initHeightMap()
   initWater()
   initModels()
   
-  
   initAnimations()
-  initReticle()
 }
 
 function initScene() {
@@ -147,14 +146,19 @@ function initScene() {
   sun2.castShadow = true
   scene.add(sun2)
   
-  const frame = new THREE.Mesh(
-    new THREE.TorusGeometry(BOUNDS * globalScale / Math.pow(2, 1/2), .1, 3, 4),
-    new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.7,
-      metalness: 0.0
-    })
-  );
+  const frameGeo = new THREE.TorusGeometry(BOUNDS * globalScale / 1.414, .08, 6, 4)
+  const texture = (new THREE.TextureLoader(manager)).load('https://threejsfundamentals.org/threejs/lessons/resources/images/compressed-but-large-wood-texture.jpg')
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set( 100, 4 );
+  const frameMtl = new THREE.MeshStandardMaterial({
+    // color: 0x3b2f2f,
+    roughness: 0.7,
+    metalness: 0.0,
+    map: texture,
+  })
+  frameMtl.color.convertSRGBToLinear()
+  const frame = new THREE.Mesh(frameGeo, frameMtl)
   frame.rotation.x = -Math.PI / 2
   frame.rotation.z = Math.PI / 4
   
@@ -172,10 +176,14 @@ function initScene() {
   // renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement)
 
+  // window resize
+  window.addEventListener('resize', onWindowResize)
+  
   stats = new Stats()
   container.appendChild(stats.dom)
+}
 
-  
+function initStatsAndGUI() {
   // Stats
   stats = new Stats()
   container.appendChild(stats.dom)
@@ -189,10 +197,6 @@ function initScene() {
     }
   })
 
-  // window resize
-  window.addEventListener('resize', onWindowResize)
-
-  
   // data.gui
   const gui = new GUI()
 
