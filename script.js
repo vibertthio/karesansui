@@ -20,7 +20,7 @@ import smoothFragShader from './shaders/smooth.frag.js'
 import waterVertexShader from './shaders/water.vert.js'
 import waterLevelFragShader from './shaders/waterLevel.frag.js'
 
-console.log(THREE.REVISION)
+console.log(`THREE v${THREE.REVISION}`)
 
 // Texture width for simulation
 const WIDTH = 512
@@ -54,7 +54,6 @@ let readWaterLevelShader
 let readWaterLevelRenderTarget
 let readWaterLevelImage
 const waterNormal = new THREE.Vector3()
-
 
 const simplex = new SimplexNoise()
 
@@ -100,11 +99,11 @@ function init() {
   initReticle()
   initNotVRControl()
   initLayout()
-  
+
   initHeightMap()
   initWater()
   initModels()
-  
+
   initAnimations()
 }
 
@@ -112,14 +111,11 @@ function initScene() {
   container = document.createElement('div')
   container.id = 'container'
   document.body.appendChild(container)
-  
+
   splash = document.getElementById('splash')
 
-  
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000)
   camera.position.set(0, 4.5, 0)
-
-  
 
   scene = new THREE.Scene()
   scene.background = new THREE.Color(0x111111)
@@ -143,9 +139,9 @@ function initScene() {
   sun2.position.set(-1, 5, -2)
   sun2.castShadow = true
   scene.add(sun2)
-  
-  const frameGeo = new THREE.TorusGeometry(BOUNDS * globalScale / 1.414, .08, 6, 4)
-  const texture = (new THREE.TextureLoader(manager)).load('https://threejsfundamentals.org/threejs/lessons/resources/images/compressed-but-large-wood-texture.jpg')
+
+  const frameGeo = new THREE.TorusGeometry((BOUNDS * globalScale) / 1.414, 0.08, 6, 4)
+  const texture = new THREE.TextureLoader(manager).load('./assets/wood.jpg')
   texture.wrapS = THREE.MirroredRepeatWrapping
   texture.wrapT = THREE.MirroredRepeatWrapping
   texture.rotation = Math.PI / 2
@@ -154,19 +150,16 @@ function initScene() {
     roughness: 0.9,
     metalness: 0.0,
     map: texture,
-    colorDiffuse: [0.1137, 0.1137, 0.1137],
-    colorAmbient: [0.1137, 0.1137, 0.1137],
-    colorSpecular: [0.9000, 0.9000, 0.9000],
   })
   frameMtl.color.convertSRGBToLinear()
   const frame = new THREE.Mesh(frameGeo, frameMtl)
   frame.rotation.x = -Math.PI / 2
   frame.rotation.z = Math.PI / 4
-  
+
   frame.castShadow = true
   frame.receiveShadow = true
-  
-  scene.add( frame );
+
+  scene.add(frame)
 
   renderer = new THREE.WebGLRenderer()
   renderer.setPixelRatio(window.devicePixelRatio)
@@ -179,7 +172,7 @@ function initScene() {
 
   // window resize
   window.addEventListener('resize', onWindowResize)
-  
+
   stats = new Stats()
   container.appendChild(stats.dom)
 }
@@ -224,10 +217,8 @@ function initStatsAndGUI() {
 }
 
 function initVRControllers() {
-  
   container.appendChild(VRButton.createButton(renderer))
 
-  
   // controllers
   function onSelectStart() {
     this.userData.isSelecting = true
@@ -235,14 +226,13 @@ function initVRControllers() {
 
   function onSelectEnd() {
     this.userData.isSelecting = false
-    
+
     if (this.userData.name === 'controller1' && reticle.visible) {
       userGroup.position.x = reticle.position.x
       userGroup.position.z = reticle.position.z
       resetUserGroupPositions()
-      
     }
-    
+
     if (this.userData.name === 'controller2') {
       changeLayout()
     }
@@ -253,13 +243,13 @@ function initVRControllers() {
   controller1.addEventListener('selectstart', onSelectStart)
   controller1.addEventListener('selectend', onSelectEnd)
   controller1.position.set(0.5, 1.5, -1)
-  
+
   controller2 = renderer.xr.getController(1)
   controller2.userData.name = 'controller2'
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
   controller2.position.set(-0.5, 1.5, -1)
-  
+
   // The XRControllerModelFactory will automatically fetch controller models
   // that match what the user is holding as closely as possible. The models
   // should be attached to the object returned from getControllerGrip in
@@ -275,21 +265,16 @@ function initVRControllers() {
   controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2))
   scene.add(controllerGrip2)
 
-  const line = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3( 0, 0, 0 ),
-      new THREE.Vector3( 0, 0, - 1 ),
-    ])
-  )
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]))
   line.name = 'line'
   line.scale.z = 5
 
-  controller1.add( line.clone() )
-  controller2.add( line.clone() )
+  controller1.add(line.clone())
+  controller2.add(line.clone())
 
   // UserGroup
   userGroup = new THREE.Group()
-  userGroup.position.set(0,0,0)
+  userGroup.position.set(0, 0, 0)
   userGroup.add(camera)
   userGroup.add(controllerGrip1)
   userGroup.add(controller1)
@@ -303,7 +288,7 @@ function initNotVRControl() {
   controls = new OrbitControls(camera, renderer.domElement)
   // controls.maxDistance = 1500;
   // controls.minDistance = 600;
-  controls.maxPolarAngle = Math.PI * 0.45;
+  controls.maxPolarAngle = Math.PI * 0.45
 }
 
 function initLayout() {
@@ -327,13 +312,12 @@ function initLoadingManager() {
     console.log(item, `${loaded} / ${total}`)
   }
   manager.onLoad = () => {
-	  console.log('Loading complete!')
+    console.log('Loading complete!')
     splash.style.display = 'none'
   }
   manager.onError = (url) => {
     console.log('There was an error loading ' + url)
-  };
-  
+  }
 }
 
 function initHeightMap() {
@@ -409,9 +393,8 @@ function initHeightMap() {
 }
 
 function initWater() {
-  
   // texture
-  const texture = (new THREE.TextureLoader(manager)).load('./assets/sand.jpg')
+  const texture = new THREE.TextureLoader(manager).load('./assets/sand.jpg')
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(100, 100)
   texture.updateMatrix()
@@ -462,7 +445,7 @@ function initWater() {
   meshRay = new THREE.Mesh(geometryRay, new THREE.MeshBasicMaterial({ color: 0xffffff, visible: false }))
   meshRay.rotation.x = -Math.PI / 2
   meshRay.scale.set(globalScale, globalScale, globalScale)
-  meshRay.position.y = 0.1;
+  meshRay.position.y = 0.1
   meshRay.matrixAutoUpdate = false
   meshRay.updateMatrix()
   meshRay.name = 'meshRay'
@@ -479,7 +462,7 @@ function initModels() {
   const onError = (err) => {
     console.log('Error while loading rock model: ', err)
   }
-  
+
   const onLoadedObj = (object) => {
     rock = object
     rock.castShadow = true
@@ -493,18 +476,13 @@ function initModels() {
     rock.scale.set(rockScale, rockScale, rockScale)
     rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z)
   }
-  
+
   const mtlLoader = new MTLLoader(manager)
   mtlLoader.load(rockMtl, (materials) => {
     materials.preload()
     const objLoader = new OBJLoader(manager)
     objLoader.setMaterials(materials)
-    objLoader.load(
-      rockObj,
-      onLoadedObj,
-      onProgress,
-      onError,
-    )
+    objLoader.load(rockObj, onLoadedObj, onProgress, onError)
   })
 }
 
@@ -520,7 +498,7 @@ function initAnimations() {
   // const sandEasingOut = TWEEN.Easing.Back.Out;
 
   const threshold = (rockPositionY * globalScale - rockPositionYDisplace * globalScale) * 0.5
-  
+
   const rockScaleAniBack = new TWEEN.Tween(scale)
     .easing(rockEasingOut)
     .to({ value: 1 }, 400)
@@ -528,7 +506,7 @@ function initAnimations() {
       const scl = rockScale * scale.value
       rock.scale.set(scl, scl, scl)
       rock.position.setY(lerp(1, 0, rockPositionY * globalScale, rockPositionYDisplace * globalScale, scale.value))
-      
+
       if (rockPositionY * globalScale - rock.position.y < threshold) {
         rock.visible = true
       }
@@ -541,7 +519,7 @@ function initAnimations() {
       const scl = rockScale * (scale.value * 0.5 + 0.5)
       rock.scale.set(scl, scl, scl)
       rock.position.setY(lerp(1, 0, rockPositionY * globalScale, rockPositionYDisplace * globalScale, scale.value))
-    
+
       if (rockPositionY * globalScale - rock.position.y > threshold) {
         rock.visible = false
       }
@@ -583,21 +561,21 @@ function initAnimations() {
 }
 
 function initReticle() {
-  const geometry = new THREE.IcosahedronGeometry( 0.05, 8 )
+  const geometry = new THREE.IcosahedronGeometry(0.05, 8)
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     roughness: 0.7,
-    metalness: 0.0
+    metalness: 0.0,
   })
-  reticle = new THREE.Mesh( geometry, material )
-  
+  reticle = new THREE.Mesh(geometry, material)
+
   reticle.castShadow = true
   reticle.receiveShadow = true
   reticle.position.x = 0
   reticle.position.y = 0.5
   reticle.position.z = -1
   reticle.visible = false
-  
+
   scene.add(reticle)
 }
 
@@ -708,36 +686,29 @@ function buildController(data) {
   }
 }
 
-function getIntersections( controller, objectsArray ) {
+function getIntersections(controller, objectsArray) {
+  tempMatrix.identity().extractRotation(controller.matrixWorld)
 
-  tempMatrix.identity().extractRotation( controller.matrixWorld );
+  raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld)
+  raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
 
-  raycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
-  raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
-
-  return raycaster.intersectObjects(objectsArray);
-
+  return raycaster.intersectObjects(objectsArray)
 }
 
-function intersectObjects( controller ) {
+function intersectObjects(controller) {
+  const line = controller.getObjectByName('line')
+  const intersections = getIntersections(controller, [meshRay])
 
-  const line = controller.getObjectByName( 'line' )
-  const intersections = getIntersections( controller, [meshRay] )
-
-  if ( intersections.length > 0 ) {
-
-    const intersection = intersections[ 0 ]
+  if (intersections.length > 0) {
+    const intersection = intersections[0]
 
     reticle.visible = true
     reticle.position.copy(intersection.point)
     line.scale.z = intersection.distance
-
   } else {
-
     line.scale.z = 5
     reticle.visible = false
   }
-
 }
 
 function resetUserGroupPositions() {
@@ -763,11 +734,10 @@ function sceneUpdate(deltaTime, elapsedTime) {
 }
 
 function render() {
-  
   stats.begin()
-  
+
   intersectObjects(controller1)
-  
+
   // TWEEN
   TWEEN.update()
 
@@ -781,8 +751,7 @@ function render() {
 
   // Render
   renderer.render(scene, camera)
-  
-  
+
   stats.end()
 }
 
