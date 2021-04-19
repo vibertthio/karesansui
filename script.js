@@ -230,8 +230,9 @@ function initVRControllers() {
       const intersections = getIntersections(this, rock.children)
       if (intersections.length > 0) {
         rockReticle.visible = true
-        console.log('intersections', intersections)
+        this.userData.touchingRock = true
       }
+      
     }
   }
 
@@ -247,8 +248,8 @@ function initVRControllers() {
     }
 
     if (this.name === 'controller2') {
-      if (rockReticle.visible) {
-        rockReticle.visible = false
+      if (this.userData.touchingRock) {
+        this.userData.touchingRock = false
       } else {
         changeLayout(reticle.position)  
       }
@@ -314,13 +315,19 @@ function initNotVRControl() {
 
 function initLayout(position) {
   
+  let mainPos
+  if (!position) {
+    mainPos = new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0)  
+  } else {
+    mainPos = new THREE.Vector3(position.x, position.y, 1.0)
+  }
   
   
   // Circular Wave
   circularWavePosition = [
     new THREE.Vector3(lerp(0, 1, 0.2, 0.25, Math.random()), lerp(0, 1, 0.1, 0.7, Math.random()), 1.0),
     new THREE.Vector3(lerp(0, 1, 0.7, 0.9, Math.random()), lerp(0, 1, 0.3, 0.5, Math.random()), 1.0),
-    new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0),
+    mainPos,
   ]
   circularWaveRadius = [new THREE.Vector2(0.2, 0.05), new THREE.Vector2(0.1, 0.0), new THREE.Vector2(0.3, 0.03)]
 
@@ -603,7 +610,7 @@ function initReticle() {
 }
 
 function createReticle(color = 0xffffff) {
-  const rg = new THREE.IcosahedronGeometry(0.02, 8)
+  const rg = new THREE.IcosahedronGeometry(0.04, 8)
   const rm = new THREE.MeshStandardMaterial({
     color,
     roughness: 0.7,
