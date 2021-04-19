@@ -319,7 +319,10 @@ function initLayout(position) {
   if (!position) {
     mainPos = new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0)  
   } else {
-    mainPos = new THREE.Vector3(position.x, position.y, 1.0)
+    const w = BOUNDS * globalScale
+    const x = lerp(-w, w, 0, 1, position.x)
+    const z = lerp(-w, w, 0, 1, -position.z)
+    mainPos = new THREE.Vector3(x, z, 1.0)
   }
   
   
@@ -618,8 +621,8 @@ function createReticle(color = 0xffffff) {
   })
   const reticle = new THREE.Mesh(rg, rm)
 
-  reticle.castShadow = true
-  reticle.receiveShadow = true
+  // reticle.castShadow = true
+  // reticle.receiveShadow = true
   reticle.position.set(0, .2, 0)
   reticle.visible = false
   
