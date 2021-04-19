@@ -481,8 +481,6 @@ function initModels() {
   const onLoadedObj = (object) => {
     rock = object
     rock.name = 'rockGroup'
-    
-    console.log('rockGroup', rock)
 
     const { children } = rock
     children[0].castShadow = true
@@ -727,7 +725,16 @@ function getIntersections(controller, objectsArray) {
 
 function intersectObjects(controller) {
   const line = controller.getObjectByName('line')
-  const intersections = getIntersections(controller, [meshRay])
+  
+  const objects = []
+  if (meshRay) {
+    objects.push(meshRay)
+  }
+  if (rock) {
+    objects.push(rock.children[0])
+  }
+  
+  const intersections = getIntersections(controller, objects)
 
   if (intersections.length > 0) {
     const intersection = intersections[0]
