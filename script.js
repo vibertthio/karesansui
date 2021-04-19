@@ -234,14 +234,13 @@ function initVRControllers() {
         console.log('controller2.position', this.position)
         
         const ip = intersections[0].point
-        const cp = this.position
-        // const up = userGroup.position
-        const up = new THREE.Vector3(0, 0, 0)
+        let cp = new THREE.Vector3
+        this.getWorldPosition(cp)
         
         this.userData.touchingRockVector = new THREE.Vector3(
-          ip.x - cp.x + up.x,
-          ip.y - cp.y + up.y,
-          ip.z - cp.z + up.z,
+          ip.x - cp.x,
+          ip.y - cp.y,
+          ip.z - cp.z,
         ).normalize()
       }
       
@@ -782,36 +781,36 @@ function sceneUpdate(deltaTime, elapsedTime) {
     uTime.value += deltaTime
   }
 
+  // rotate
   if (rock) {
     rock.rotation.y += deltaTime * rockRotationSpeed
+  }
+  
+  // rotate if it's selected
+  if (controller2.userData.touchingRock && controller2.userData.touchingRockVector) {
+
+    const beginVector = controller2.userData.touchingRockVector
+    
+    const ray = new THREE.Ray()
+    tempMatrix.identity().extractRotation(controller2.matrixWorld)
+    ray.origin.setFromMatrixPosition(controller2.matrixWorld)
+    ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
+    
+    const endVector = ray.direction
+    const angle = beginVector.angleTo(endVector)
+    
+    rock.rotation.y += angle * .2
   }
 }
 
 function render() {
   stats.begin()
 
-  
-  // intersectObjects(controller1)
   if (renderer.xr.isPresenting) {
     intersectObjects(controller1)  
-    intersectObjects(controller2)
-    
-    if (controller2.userData.touchingRock && controller2.userData.touchingRockVector) {
-      // get angle
-      tempMatrix.identity().extractRotation(controller2.matrixWorld)
-      
-      const beginVector = controller2.userData.touchingRockVector.clone().applyMatrix4(tempMatrix)
-      const endVector = new THREE.Vector3(0, 0, -1)
-      const angle = beginVector.angleTo(endVector)
-      
-      console.log(beginVector, endVector)
-      
-      rock.rotation.y += angle * .1
-    }
+    intersectObjects(controller2) 
   }
   
-  
-
   // TWEEN
   TWEEN.update()
 
