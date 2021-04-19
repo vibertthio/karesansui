@@ -237,8 +237,10 @@ function initVRControllers() {
 
   function onSelectEnd() {
     this.userData.isSelecting = false
+    
+    const { reticle } = this.userData
 
-    if (this.name === 'controller1' && this.userData.reticle.visible) {
+    if (this.name === 'controller1' && reticle.visible) {
       userGroup.position.x = reticle.position.x
       userGroup.position.z = reticle.position.z
       resetUserGroupPositions()
@@ -624,6 +626,8 @@ function createReticle(color = 0xffffff) {
   reticle.receiveShadow = true
   reticle.position.set(0, .2, 0)
   reticle.visible = true
+  
+  scene.add(reticle)
 
   return reticle
 }
@@ -756,14 +760,13 @@ function intersectObjects(controller) {
   }
   
   const intersections = getIntersections(controller, objects)
-  const reticle
+  const { reticle } = controller.userData
 
   if (intersections.length > 0) {
     const intersection = intersections[0]
 
     reticle.visible = true
     reticle.position.copy(intersection.point)
-    
     
     line.scale.z = intersection.distance
   } else {
@@ -797,9 +800,11 @@ function sceneUpdate(deltaTime, elapsedTime) {
 function render() {
   stats.begin()
 
+  
+  // intersectObjects(controller1)
   if (renderer.xr.isPresenting) {
     intersectObjects(controller1)  
-    // intersectObjects(controller2)
+    intersectObjects(controller2)
   }
   
   
