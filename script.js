@@ -227,7 +227,7 @@ function initVRControllers() {
 
   // controllers
   function onSelectStart() {
-    this.userData.isSelecting = true
+    
     
     const { reticle } = this.userData
     
@@ -257,11 +257,11 @@ function initVRControllers() {
       }
       
     }
+    
+    this.userData.isSelecting = true
   }
 
   function onSelectEnd() {
-    
-    this.userData.isSelecting = false
     
     const { reticle } = this.userData
 
@@ -279,10 +279,11 @@ function initVRControllers() {
         this.userData.touchingRock = false
         this.userData.touchingRockVector = null
       } else {
-        changeLayout(reticle.position)  
+        changeLayout(reticle.visible ? reticle.position : undefined)  
       }
     }
     
+    this.userData.isSelecting = false
     this.userData.walking = false
   }
 
