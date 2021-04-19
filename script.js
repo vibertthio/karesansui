@@ -225,12 +225,13 @@ function initVRControllers() {
     this.userData.isSelecting = true
     
     if (this.userData.name === 'controller2') {
-      const intersections = getIntersections(this, scene.children)
+      
+      // rock is a THREE.Group, so you should check rock.children
+      const intersections = getIntersections(this, rock.children)
       if (intersections.length > 0) {
         rockReticle.visible = true
         console.log('intersections', intersections)
       }
-      
     }
   }
 
@@ -479,8 +480,9 @@ function initModels() {
 
   const onLoadedObj = (object) => {
     rock = object
-    rock.castShadow = true
-    rock.receiveShadow = true
+    rock.name = 'rockGroup'
+    
+    console.log('rockGroup', rock)
 
     const { children } = rock
     children[0].castShadow = true
