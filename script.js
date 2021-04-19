@@ -96,7 +96,6 @@ function init() {
   initLoadingManager()
   initScene()
   initStatsAndGUI()
-  initReticle()
   initVRControllers()
   initNotVRControl()
   initLayout()
@@ -229,8 +228,8 @@ function initVRControllers() {
       // rock is a THREE.Group, so you should check rock.children
       const intersections = getIntersections(this, rock.children)
       if (intersections.length > 0) {
-        rockReticle.visible = true
         this.userData.touchingRock = true
+        this.userData.touchingRockVector = new THREE.Vector3().copy()
       }
       
     }
@@ -250,6 +249,7 @@ function initVRControllers() {
     if (this.name === 'controller2') {
       if (this.userData.touchingRock) {
         this.userData.touchingRock = false
+        this.userData.touchingRockVector = null
       } else {
         changeLayout(reticle.position)  
       }
@@ -319,7 +319,7 @@ function initLayout(position) {
   if (!position) {
     mainPos = new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0)  
   } else {
-    const w = BOUNDS * globalScale
+    const w = BOUNDS * globalScale * 0.5;
     const x = lerp(-w, w, 0, 1, position.x)
     const z = lerp(-w, w, 0, 1, -position.z)
     mainPos = new THREE.Vector3(x, z, 1.0)
@@ -593,36 +593,16 @@ function initAnimations() {
     })
 }
 
-function initReticle() {
-  
-  
-  const g = new THREE.IcosahedronGeometry(0.1, 8)
-  const m = new THREE.MeshStandardMaterial({
-    color: 0xff00ff,
-    roughness: 0.7,
-    metalness: 0.0,
-  })
-  rockReticle = new THREE.Mesh(g, m)
-  rockReticle.castShadow = true
-  rockReticle.receiveShadow = true
-  rockReticle.position.set(0, 1, 0)
-  rockReticle.visible = false
-  
-  scene.add(rockReticle)
-  
-}
-
 function createReticle(color = 0xffffff) {
   const rg = new THREE.IcosahedronGeometry(0.04, 8)
-  const rm = new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.7,
-    metalness: 0.0,
-  })
+  const rm = new THREE.MeshBasicMaterial({ color })
+  // const rm = new THREE.MeshStandardMaterial({
+  //   color,
+  //   roughness: 0.7,
+  //   metalness: 0.0,
+  // })
   const reticle = new THREE.Mesh(rg, rm)
 
-  // reticle.castShadow = true
-  // reticle.receiveShadow = true
   reticle.position.set(0, .2, 0)
   reticle.visible = false
   
@@ -804,6 +784,11 @@ function render() {
   if (renderer.xr.isPresenting) {
     intersectObjects(controller1)  
     intersectObjects(controller2)
+    
+    if (controller2.userData.touchingRock) {
+      // get angle
+      
+    }
   }
   
   
