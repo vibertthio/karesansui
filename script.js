@@ -225,9 +225,10 @@ function initVRControllers() {
     this.userData.isSelecting = true
     
     if (this.userData.name === 'controller2') {
-      const intersections = getIntersections(this, [rock])
+      const intersections = getIntersections(this, scene.children)
       if (intersections.length > 0) {
         rockReticle.visible = true
+        console.log('intersections', intersections)
       }
       
     }
