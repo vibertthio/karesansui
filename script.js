@@ -62,16 +62,17 @@ const simplex = new SimplexNoise()
 // Rocks
 const rockObj = './models/rock/rock_1.obj'
 const rockMtl = './models/rock/rock_1.mtl'
-let rock
-let mouseOnRock = false
-let rockRotationSpeed = 1.0
-let rockPosition
 const rockScale = 70 * globalScale
 const rockPositionY = -11
+const rockRotate = { value: 0 }
+let rock
+let mouseOnRock = false
+let rockRotationSpeed = 0
+let rockPosition
 let rockScaleAni
 let rockRotateAni
 let rockAngle = 0
-const rockRotate = { value: 0 }
+
 
 
 // Circular Wave
@@ -195,7 +196,7 @@ function initStatsAndGUI() {
   const gui = new GUI()
 
   const effectController = {
-    rockRotationSpeed: 0.1,
+    rockRotationSpeed: 0,
   }
 
   const valuesChanger = () => {
@@ -249,7 +250,7 @@ function initVRControllers() {
       if (rockReticle.visible) {
         rockReticle.visible = false
       } else {
-        changeLayout()  
+        changeLayout(reticle.position)  
       }
     }
   }
@@ -311,7 +312,10 @@ function initNotVRControl() {
   controls.maxPolarAngle = Math.PI * 0.45
 }
 
-function initLayout() {
+function initLayout(position) {
+  
+  
+  
   // Circular Wave
   circularWavePosition = [
     new THREE.Vector3(lerp(0, 1, 0.2, 0.25, Math.random()), lerp(0, 1, 0.1, 0.7, Math.random()), 1.0),
@@ -492,7 +496,7 @@ function initModels() {
     children[0].receiveShadow = true
 
     scene.add(rock)
-    rock.scale.set(rockScale, rockScale, rockScale)
+    rock.scale.setScalar(rockScale)
     rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z)
   }
 
@@ -523,7 +527,7 @@ function initAnimations() {
     .to({ value: 1 }, 400)
     .onUpdate((scale) => {
       const scl = rockScale * scale.value
-      rock.scale.set(scl, scl, scl)
+      rock.scale.setScalar(scl)
       rock.position.setY(lerp(1, 0, rockPositionY * globalScale, rockPositionYDisplace * globalScale, scale.value))
 
       if (rockPositionY * globalScale - rock.position.y < threshold) {
@@ -536,7 +540,7 @@ function initAnimations() {
     .to({ value: 0 }, 900)
     .onUpdate((scale) => {
       const scl = rockScale * (scale.value * 0.5 + 0.5)
-      rock.scale.set(scl, scl, scl)
+      rock.scale.setScalar(scl)
       rock.position.setY(lerp(1, 0, rockPositionY * globalScale, rockPositionYDisplace * globalScale, scale.value))
 
       if (rockPositionY * globalScale - rock.position.y > threshold) {
@@ -617,10 +621,10 @@ function createReticle(color = 0xffffff) {
   return reticle
 }
 
-function changeLayout() {
+function changeLayout(position) {
   if (!layoutChanging) {
     layoutChanging = true
-    initLayout()
+    initLayout(position)
     rockScaleAni.start()
     masterScaleAni.start()
   }
