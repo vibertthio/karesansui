@@ -229,6 +229,12 @@ function initVRControllers() {
   function onSelectStart() {
     this.userData.isSelecting = true
     
+    const { reticle } = this.userData
+    
+    if (this.name === 'controller1' && !reticle.visible) {
+      this.userData.walking = true
+    }
+    
     if (this.name === 'controller2') {
       
       // rock is a THREE.Group, so you should check rock.children
@@ -254,13 +260,17 @@ function initVRControllers() {
   }
 
   function onSelectEnd() {
+    
     this.userData.isSelecting = false
     
     const { reticle } = this.userData
 
-    if (this.name === 'controller1' && reticle.visible) {
-      userGroup.position.x = reticle.position.x
-      userGroup.position.z = reticle.position.z
+    
+    if (this.name === 'controller1' &&
+        reticle.visible &&
+        !this.userData.walking // either walk or teleportation
+    ) {
+      userGroup.position.set(reticle.position.x, 0, reticle.position.z)
       resetUserGroupPositions()
     }
 
@@ -272,6 +282,8 @@ function initVRControllers() {
         changeLayout(reticle.position)  
       }
     }
+    
+    this.userData.walking = false
   }
 
   controller1 = renderer.xr.getController(0)
@@ -808,12 +820,15 @@ function sceneUpdate(deltaTime, elapsedTime) {
     rock.rotation.y += angle * .2
   }
   
-  // move around
-  if (controller1.userData.isSelecting) {
+  // walk around
+  if (controller1.userData.isSelecting && controller1.userData.walking) {
     const originalQuaternion = userGroup.quaternion.clone()
     userGroup.quaternion.copy(dummyCam.getWorldQuaternion())
     userGroup.translateZ(-deltaTime * WALK_SPEED)
-    userGroup.position.y = 0
+    
+    // keep the user on the ground
+    // userGroup.position.y = 0
+    
     userGroup.quaternion.copy(originalQuaternion)
   }
 }
