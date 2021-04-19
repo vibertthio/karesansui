@@ -29,6 +29,8 @@ const WIDTH = 512
 const BOUNDS = 1024
 const BOUNDS_HALF = BOUNDS * 0.5
 
+const WALK_SPEED = 0.8
+
 let container, splash, stats
 let camera, dummyCam, scene, renderer, controls
 let controller1, controller2
@@ -116,6 +118,9 @@ function initScene() {
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000)
   camera.position.set(0, 4.5, 0)
+  
+  dummyCam = new THREE.Object3D()
+  camera.add(dummyCam)
 
   scene = new THREE.Scene()
   scene.background = new THREE.Color(0x111111)
@@ -801,6 +806,15 @@ function sceneUpdate(deltaTime, elapsedTime) {
     const angle = beginVector.angleTo(endVector)
     
     rock.rotation.y += angle * .2
+  }
+  
+  // move around
+  if (controller1.userData.isSelecting) {
+    const originalQuaternion = userGroup.quaternion.clone()
+    userGroup.quaternion.copy(dummyCam.getWorldQuaternion())
+    userGroup.translateZ(-deltaTime * WALK_SPEED)
+    userGroup.position.y = 0
+    userGroup.quaternion.copy(originalQuaternion)
   }
 }
 
