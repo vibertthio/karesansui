@@ -233,10 +233,15 @@ function initVRControllers() {
         console.log('inter', intersections[0])
         console.log('controller2.position', this.position)
         
+        const ip = intersections[0].point
+        const cp = this.position
+        // const up = userGroup.position
+        const up = new THREE.Vector3(0, 0, 0)
+        
         this.userData.touchingRockVector = new THREE.Vector3(
-          intersections[0].x - this.position.x,
-          intersections[0].y - this.position.y,
-          intersections[0].z - this.position.z,
+          ip.x - cp.x + up.x,
+          ip.y - cp.y + up.y,
+          ip.z - cp.z + up.z,
         ).normalize()
       }
       
@@ -277,8 +282,6 @@ function initVRControllers() {
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
   controller2.position.set(-0.5, 1.5, -1)
-  
-  console.log(controller1, controller2)
 
   // The XRControllerModelFactory will automatically fetch controller models
   // that match what the user is holding as closely as possible. The models
@@ -795,12 +798,13 @@ function render() {
     
     if (controller2.userData.touchingRock && controller2.userData.touchingRockVector) {
       // get angle
-      console.log(controller2.userData)
       tempMatrix.identity().extractRotation(controller2.matrixWorld)
       
-      const beginVector = controller2.userData.touchingRockVector.copy().applyMatrix4(tempMatrix)
+      const beginVector = controller2.userData.touchingRockVector.clone().applyMatrix4(tempMatrix)
       const endVector = new THREE.Vector3(0, 0, -1)
       const angle = beginVector.angleTo(endVector)
+      
+      console.log(beginVector, endVector)
       
       rock.rotation.y += angle * .1
     }
