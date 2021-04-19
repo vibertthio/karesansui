@@ -98,7 +98,7 @@ function init() {
   initStatsAndGUI()
   initVRControllers()
   initNotVRControl()
-  initLayout()
+  initLayout(new THREE.Vector3(0, 0, 0))
 
   initHeightMap()
   initWater()
@@ -229,7 +229,10 @@ function initVRControllers() {
       const intersections = getIntersections(this, rock.children)
       if (intersections.length > 0) {
         this.userData.touchingRock = true
-        this.userData.touchingRockVector = new THREE.Vector3().copy()
+        
+        // console.log(intersections[0])
+        this.userData.touchingRockVector = intersections[0].point.copy().add(this.position.copy().negate()).normalize()
+        
       }
       
     }
@@ -787,7 +790,13 @@ function render() {
     
     if (controller2.userData.touchingRock) {
       // get angle
+      tempMatrix.identity().extractRotation(controller2.matrixWorld)
       
+      const beginVector = controller2.userData.touchingRockVector.copy().applyMatrix4(tempMatrix)
+      const endVector = new THREE.Vector3(0, 0, -1)
+      const angle = beginVector.angleTo(endVector)
+      
+      rock.rotation.y += angle * .1
     }
   }
   
