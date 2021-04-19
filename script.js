@@ -96,8 +96,8 @@ function init() {
   initLoadingManager()
   initScene()
   initStatsAndGUI()
-  initVRControllers()
   initReticle()
+  initVRControllers()
   initNotVRControl()
   initLayout()
 
@@ -224,7 +224,7 @@ function initVRControllers() {
   function onSelectStart() {
     this.userData.isSelecting = true
     
-    if (this.userData.name === 'controller2') {
+    if (this.name === 'controller2') {
       
       // rock is a THREE.Group, so you should check rock.children
       const intersections = getIntersections(this, rock.children)
@@ -238,13 +238,13 @@ function initVRControllers() {
   function onSelectEnd() {
     this.userData.isSelecting = false
 
-    if (this.userData.name === 'controller1' && reticle.visible) {
+    if (this.name === 'controller1' && this.userData.reticle.visible) {
       userGroup.position.x = reticle.position.x
       userGroup.position.z = reticle.position.z
       resetUserGroupPositions()
     }
 
-    if (this.userData.name === 'controller2') {
+    if (this.name === 'controller2') {
       if (rockReticle.visible) {
         rockReticle.visible = false
       } else {
@@ -254,13 +254,15 @@ function initVRControllers() {
   }
 
   controller1 = renderer.xr.getController(0)
-  controller1.userData.name = 'controller1'
+  controller1.name = 'controller1'
+  controller1.userData.reticle = createReticle(0xffffff)
   controller1.addEventListener('selectstart', onSelectStart)
   controller1.addEventListener('selectend', onSelectEnd)
   controller1.position.set(0.5, 1.5, -1)
 
   controller2 = renderer.xr.getController(1)
-  controller2.userData.name = 'controller2'
+  controller2.name = 'controller2'
+  controller2.userData.reticle = createReticle(0xff00ff)
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
   controller2.position.set(-0.5, 1.5, -1)
@@ -609,6 +611,23 @@ function initReticle() {
   
 }
 
+function createReticle(color = 0xffffff) {
+  const rg = new THREE.IcosahedronGeometry(0.05, 8)
+  const rm = new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.7,
+    metalness: 0.0,
+  })
+  const reticle = new THREE.Mesh(rg, rm)
+
+  reticle.castShadow = true
+  reticle.receiveShadow = true
+  reticle.position.set(0, .2, 0)
+  reticle.visible = true
+
+  return reticle
+}
+
 function changeLayout() {
   if (!layoutChanging) {
     layoutChanging = true
@@ -737,6 +756,7 @@ function intersectObjects(controller) {
   }
   
   const intersections = getIntersections(controller, objects)
+  const reticle
 
   if (intersections.length > 0) {
     const intersection = intersections[0]
