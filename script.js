@@ -30,7 +30,7 @@ const BOUNDS = 1024
 const BOUNDS_HALF = BOUNDS * 0.5
 
 let container, splash, stats
-let camera, scene, renderer, controls
+let camera, dummyCam, scene, renderer, controls
 let controller1, controller2
 let controllerGrip1, controllerGrip2
 
@@ -217,6 +217,7 @@ function initStatsAndGUI() {
 }
 
 function initVRControllers() {
+  
   container.appendChild(VRButton.createButton(renderer))
 
   // controllers
