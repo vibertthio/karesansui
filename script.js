@@ -264,6 +264,8 @@ function initVRControllers() {
   controller2.addEventListener('selectstart', onSelectStart)
   controller2.addEventListener('selectend', onSelectEnd)
   controller2.position.set(-0.5, 1.5, -1)
+  
+  console.log(controller1, controller2)
 
   // The XRControllerModelFactory will automatically fetch controller models
   // that match what the user is holding as closely as possible. The models
@@ -585,8 +587,8 @@ function initReticle() {
 
   reticle.castShadow = true
   reticle.receiveShadow = true
-  reticle.position.set(0, 0, 0)
-  reticle.visible = false
+  reticle.position.set(0, .2, 0)
+  reticle.visible = true
 
   scene.add(reticle)
   
@@ -741,6 +743,8 @@ function intersectObjects(controller) {
 
     reticle.visible = true
     reticle.position.copy(intersection.point)
+    
+    
     line.scale.z = intersection.distance
   } else {
     line.scale.z = 5
@@ -773,7 +777,12 @@ function sceneUpdate(deltaTime, elapsedTime) {
 function render() {
   stats.begin()
 
-  intersectObjects(controller1)
+  if (renderer.xr.isPresenting) {
+    intersectObjects(controller1)  
+    // intersectObjects(controller2)
+  }
+  
+  
 
   // TWEEN
   TWEEN.update()
