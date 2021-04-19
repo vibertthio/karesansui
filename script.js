@@ -46,7 +46,6 @@ let globalScale = 0.005
 
 let waterMesh
 let meshRay
-let reticle
 let rockReticle
 
 let gpuCompute
@@ -581,20 +580,6 @@ function initAnimations() {
 }
 
 function initReticle() {
-  const rg = new THREE.IcosahedronGeometry(0.05, 8)
-  const rm = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    roughness: 0.7,
-    metalness: 0.0,
-  })
-  reticle = new THREE.Mesh(rg, rm)
-
-  reticle.castShadow = true
-  reticle.receiveShadow = true
-  reticle.position.set(0, .2, 0)
-  reticle.visible = true
-
-  scene.add(reticle)
   
   
   const g = new THREE.IcosahedronGeometry(0.1, 8)
@@ -614,7 +599,7 @@ function initReticle() {
 }
 
 function createReticle(color = 0xffffff) {
-  const rg = new THREE.IcosahedronGeometry(0.05, 8)
+  const rg = new THREE.IcosahedronGeometry(0.02, 8)
   const rm = new THREE.MeshStandardMaterial({
     color,
     roughness: 0.7,
@@ -625,7 +610,7 @@ function createReticle(color = 0xffffff) {
   reticle.castShadow = true
   reticle.receiveShadow = true
   reticle.position.set(0, .2, 0)
-  reticle.visible = true
+  reticle.visible = false
   
   scene.add(reticle)
 
