@@ -230,9 +230,14 @@ function initVRControllers() {
       if (intersections.length > 0) {
         this.userData.touchingRock = true
         
-        // console.log(intersections[0])
-        this.userData.touchingRockVector = intersections[0].point.copy().add(this.position.copy().negate()).normalize()
+        console.log('inter', intersections[0])
+        console.log('controller2.position', this.position)
         
+        this.userData.touchingRockVector = new THREE.Vector3(
+          intersections[0].x - this.position.x,
+          intersections[0].y - this.position.y,
+          intersections[0].z - this.position.z,
+        ).normalize()
       }
       
     }
@@ -788,8 +793,9 @@ function render() {
     intersectObjects(controller1)  
     intersectObjects(controller2)
     
-    if (controller2.userData.touchingRock) {
+    if (controller2.userData.touchingRock && controller2.userData.touchingRockVector) {
       // get angle
+      console.log(controller2.userData)
       tempMatrix.identity().extractRotation(controller2.matrixWorld)
       
       const beginVector = controller2.userData.touchingRockVector.copy().applyMatrix4(tempMatrix)
