@@ -246,7 +246,7 @@ function initStatsAndGUI() {
   }
   gui.add(buttons, 'changeLayout')
   gui.add(buttons, 'switchScene')
-  gui.add(buttons, 'toggleWireframe').onChange(toggleWireframe)
+  // gui.add(buttons, 'toggleWireframe').onChange(toggleWireframe)
 
   valuesChanger()
 }
