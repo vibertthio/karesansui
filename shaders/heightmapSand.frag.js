@@ -173,7 +173,7 @@ void main()	{
 
   // master
   heightmapValue.x *= pow(uMasterScale, (d + 0.02) * 15.0);
-  heightmapValue.x += cnoise2((uv - .5)*500.) * 4.;
+  heightmapValue.x += cnoise2((uv - .5)*1000.) * 5.;
   
   // if (heightmapValue.x < 20.0 && heightmapValue.x > -5.0) {
   //   heightmapValue.x += cnoise2(uv+1000) * 15.;
