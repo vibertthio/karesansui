@@ -1,21 +1,21 @@
 import * as THREE from './build/three.module.js'
 import TWEEN from './build/tween.esm.js'
 
-import Stats from './jsm/libs/stats.module.js'
-import { GUI } from './jsm/libs/dat.gui.module.js'
+import Stats from './examples/jsm/libs/stats.module.js'
+import { GUI } from './examples/jsm/libs/dat.gui.module.js'
 
-import { GPUComputationRenderer } from './jsm/misc/GPUComputationRenderer.js'
-import { SimplexNoise } from './jsm/math/SimplexNoise.js'
-import { OrbitControls } from './jsm/controls/OrbitControls.js'
+import { GPUComputationRenderer } from './examples/jsm/misc/GPUComputationRenderer.js'
+import { SimplexNoise } from './examples/jsm/math/SimplexNoise.js'
+import { OrbitControls } from './examples/jsm/controls/OrbitControls.js'
 
-import { BoxLineGeometry } from './jsm/geometries/BoxLineGeometry.js'
-import { VRButton } from './jsm/webxr/VRButton.js'
-import { XRControllerModelFactory } from './jsm/webxr/XRControllerModelFactory.js'
+import { BoxLineGeometry } from './examples/jsm/geometries/BoxLineGeometry.js'
+import { VRButton } from './examples/jsm/webxr/VRButton.js'
+import { XRControllerModelFactory } from './examples/jsm/webxr/XRControllerModelFactory.js'
 
-import { MTLLoader } from './jsm/loaders/MTLLoader.js'
-import { OBJLoader } from './jsm/loaders/OBJLoader.js'
+import { MTLLoader } from './examples/jsm/loaders/MTLLoader.js'
+import { OBJLoader } from './examples/jsm/loaders/OBJLoader.js'
 
-import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
+import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js'
 
 import heightmapFragShader from './shaders/heightmapSand.frag.js'
 import smoothFragShader from './shaders/smooth.frag.js'
