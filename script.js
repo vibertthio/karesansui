@@ -232,8 +232,8 @@ function initStatsAndGUI() {
   }
 
   gui.add(effectController, 'rockRotationSpeed', -1.0, 1.0, 0.02).onChange(valuesChanger)
-  gui.add(effectController, 'group0Scale', 0.0, 10.0, 0.1).onChange(valuesChanger)
-  gui.add(effectController, 'group1Scale', 0.0, 10.0, 0.1).onChange(valuesChanger)
+  // gui.add(effectController, 'group0Scale', 0.0, 10.0, 0.1).onChange(valuesChanger)
+  // gui.add(effectController, 'group1Scale', 0.0, 10.0, 0.1).onChange(valuesChanger)
 
   const buttons = {
     changeLayout: () => {
