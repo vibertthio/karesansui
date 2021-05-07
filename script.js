@@ -15,6 +15,8 @@ import { XRControllerModelFactory } from './jsm/webxr/XRControllerModelFactory.j
 import { MTLLoader } from './jsm/loaders/MTLLoader.js'
 import { OBJLoader } from './jsm/loaders/OBJLoader.js'
 
+import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
+
 import heightmapFragShader from './shaders/heightmapSand.frag.js'
 import smoothFragShader from './shaders/smooth.frag.js'
 import waterVertexShader from './shaders/water.vert.js'
@@ -23,7 +25,7 @@ import waterLevelFragShader from './shaders/waterLevel.frag.js'
 console.log(`THREE v${THREE.REVISION}`)
 
 // Texture width for simulation
-const WIDTH = 512
+const WIDTH = 256
 
 // Water size in system units
 const BOUNDS = 1024
@@ -48,7 +50,6 @@ let globalScale = 0.005
 
 let waterMesh
 let meshRay
-let rockReticle
 
 let gpuCompute
 let heightmapVariable
@@ -62,8 +63,10 @@ const waterNormal = new THREE.Vector3()
 const simplex = new SimplexNoise()
 
 // Rocks
+const rockGLTFPath = './models/rock_gltf/'
 const rockObj = './models/rock/rock_1.obj'
 const rockMtl = './models/rock/rock_1.mtl'
+const treePath = './models/trees/tree_green.glb'
 const rockScale = 70 * globalScale
 const rockPositionY = -11
 const rockRotate = { value: 0 }
@@ -74,8 +77,14 @@ let rockPosition
 let rockScaleAni
 let rockRotateAni
 let rockAngle = 0
+let switchSceneAni
 
+let floatingRock
+let floatingrockHeightOffset = 1.2
+let room
 
+let groups = []
+let currentGroupIndex = 0
 
 // Circular Wave
 let circularWavePosition = [
@@ -118,14 +127,14 @@ function initScene() {
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000)
   camera.position.set(0, 4.5, 0)
-  
+
   dummyCam = new THREE.Object3D()
   camera.add(dummyCam)
 
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x111111)
+  scene.background = new THREE.Color(0x101010)
 
-  const room = new THREE.LineSegments(new BoxLineGeometry(10, 10, 10, 10, 10, 10), new THREE.LineBasicMaterial({ color: 0x808080 }))
+  room = new THREE.LineSegments(new BoxLineGeometry(10, 10, 10, 10, 10, 10), new THREE.LineBasicMaterial({ color: 0x202020 }))
   room.geometry.translate(0, 3, 0)
   scene.add(room)
 
@@ -144,6 +153,17 @@ function initScene() {
   sun2.position.set(-1, 5, -2)
   sun2.castShadow = true
   scene.add(sun2)
+
+  groups[0] = new THREE.Group()
+  scene.add(groups[0])
+
+  groups[1] = new THREE.Group()
+  groups[1].visible = false
+  scene.add(groups[1])
+
+  // groups[2] = new THREE.Group()
+  // groups[2].visible = false
+  // scene.add(groups[2])
 
   const frameGeo = new THREE.TorusGeometry((BOUNDS * globalScale) / 1.414, 0.08, 6, 4)
   const texture = new THREE.TextureLoader(manager).load('./assets/wood.jpg')
@@ -201,88 +221,96 @@ function initStatsAndGUI() {
 
   const effectController = {
     rockRotationSpeed: 0,
+    group0Scale: 1,
+    group1Scale: 0,
   }
 
   const valuesChanger = () => {
     rockRotationSpeed = effectController.rockRotationSpeed
+    groups[0].scale.setScalar(effectController.group0Scale)
+    groups[1].scale.setScalar(effectController.group1Scale)
   }
 
   gui.add(effectController, 'rockRotationSpeed', -1.0, 1.0, 0.02).onChange(valuesChanger)
+  gui.add(effectController, 'group0Scale', 0.0, 10.0, 0.1).onChange(valuesChanger)
+  gui.add(effectController, 'group1Scale', 0.0, 10.0, 0.1).onChange(valuesChanger)
 
   const buttons = {
     changeLayout: () => {
       changeLayout()
     },
+    switchScene: () => {
+      switchSceneAni.start()
+    },
     toggleWireframe: false,
   }
   gui.add(buttons, 'changeLayout')
+  gui.add(buttons, 'switchScene')
   gui.add(buttons, 'toggleWireframe').onChange(toggleWireframe)
 
   valuesChanger()
 }
 
 function initVRControllers() {
-  
   container.appendChild(VRButton.createButton(renderer))
 
   // controllers
   function onSelectStart() {
-    
-    
     const { reticle } = this.userData
-    
+
     if (this.name === 'controller1' && !reticle.visible) {
       this.userData.walking = true
     }
-    
+
     if (this.name === 'controller2') {
-      
       // rock is a THREE.Group, so you should check rock.children
       const intersections = getIntersections(this, rock.children)
       if (intersections.length > 0) {
         this.userData.touchingRock = true
-        
+
         console.log('inter', intersections[0])
         console.log('controller2.position', this.position)
-        
+
         const ip = intersections[0].point
-        let cp = new THREE.Vector3
+        let cp = new THREE.Vector3()
         this.getWorldPosition(cp)
-        
-        this.userData.touchingRockVector = new THREE.Vector3(
-          ip.x - cp.x,
-          ip.y - cp.y,
-          ip.z - cp.z,
-        ).normalize()
+
+        this.userData.touchingRockVector = new THREE.Vector3(ip.x - cp.x, ip.y - cp.y, ip.z - cp.z).normalize()
       }
-      
     }
-    
+
     this.userData.isSelecting = true
   }
 
   function onSelectEnd() {
-    
     const { reticle } = this.userData
 
-    
-    if (this.name === 'controller1' &&
-        reticle.visible &&
-        !this.userData.walking // either walk or teleportation
+    if (
+      this.name === 'controller1' &&
+      reticle.visible &&
+      !this.userData.walking // either walk or teleportation
     ) {
       userGroup.position.set(reticle.position.x, 0, reticle.position.z)
       resetUserGroupPositions()
     }
 
     if (this.name === 'controller2') {
+      // if (this.userData.touchingRock) {
+      //   this.userData.touchingRock = false
+      //   this.userData.touchingRockVector = null
+      // } else {
+      //   changeLayout(reticle.visible ? reticle.position : undefined)
+      // }
       if (this.userData.touchingRock) {
         this.userData.touchingRock = false
         this.userData.touchingRockVector = null
+      } else if (reticle.visible) {
+        changeLayout(reticle.position)
       } else {
-        changeLayout(reticle.visible ? reticle.position : undefined)  
+        switchSceneAni.start()
       }
     }
-    
+
     this.userData.isSelecting = false
     this.userData.walking = false
   }
@@ -343,18 +371,16 @@ function initNotVRControl() {
 }
 
 function initLayout(position) {
-  
   let mainPos
   if (!position) {
-    mainPos = new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0)  
+    mainPos = new THREE.Vector3(lerp(0, 1, 0.2, 0.8, Math.random()), lerp(0, 1, 0.3, 0.9, Math.random()), 1.0)
   } else {
-    const w = BOUNDS * globalScale * 0.5;
+    const w = BOUNDS * globalScale * 0.5
     const x = lerp(-w, w, 0, 1, position.x)
     const z = lerp(-w, w, 0, 1, -position.z)
     mainPos = new THREE.Vector3(x, z, 1.0)
   }
-  
-  
+
   // Circular Wave
   circularWavePosition = [
     new THREE.Vector3(lerp(0, 1, 0.2, 0.25, Math.random()), lerp(0, 1, 0.1, 0.7, Math.random()), 1.0),
@@ -501,7 +527,12 @@ function initWater() {
   waterMesh.matrixAutoUpdate = false
   waterMesh.updateMatrix()
 
-  scene.add(waterMesh)
+  // scene.add(waterMesh)
+  groups[0].add(waterMesh)
+
+  // const grid = new THREE.GridHelper(BOUNDS * globalScale, 50)
+  createBlankGround(groups[1])
+  // createBlankGround(groups[2])
 
   // THREE.Mesh just for mouse raycasting
   const geometryRay = new THREE.PlaneGeometry(BOUNDS, BOUNDS, 1, 1)
@@ -513,6 +544,21 @@ function initWater() {
   meshRay.updateMatrix()
   meshRay.name = 'meshRay'
   scene.add(meshRay)
+}
+
+function createBlankGround(group) {
+  const grid = new THREE.Mesh(
+    new THREE.PlaneGeometry(BOUNDS * globalScale, BOUNDS * globalScale, 50, 50),
+    new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(0xffffff),
+      transparent: true,
+      opacity: 0.4,
+    }),
+  )
+  grid.rotation.x = -Math.PI / 2
+  grid.receiveShadow = true
+  group.add(grid)
+  group.add(new THREE.GridHelper(BOUNDS * globalScale, 100, 0x888888, 0x888888))
 }
 
 function initModels() {
@@ -534,7 +580,8 @@ function initModels() {
     children[0].castShadow = true
     children[0].receiveShadow = true
 
-    scene.add(rock)
+    // scene.add(rock)
+    groups[0].add(rock)
     rock.scale.setScalar(rockScale)
     rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z)
   }
@@ -546,11 +593,43 @@ function initModels() {
     objLoader.setMaterials(materials)
     objLoader.load(rockObj, onLoadedObj, onProgress, onError)
   })
+
+  const loader = new GLTFLoader(manager).setPath(rockGLTFPath)
+  loader.load('scene.gltf', (gltf) => {
+    gltf.scene.traverse((node) => {
+      if (node.isMesh) {
+        node.castShadow = true
+      }
+    })
+
+    gltf.scene.scale.setScalar(0.5)
+    gltf.scene.position.set(1, floatingrockHeightOffset, 1.2)
+    groups[1].add(gltf.scene)
+
+    floatingRock = gltf.scene
+  })
+
+  const treeLoader = new GLTFLoader(manager)
+  treeLoader.load(treePath, (gltf) => {
+    gltf.scene.traverse((node) => {
+      if (node.isMesh) {
+        node.castShadow = true
+      }
+    })
+
+    const scale = 0.5
+    const hOffset = scale * 3
+
+    gltf.scene.position.set(-1, hOffset, -1)
+    gltf.scene.scale.setScalar(scale)
+    groups[1].add(gltf.scene)
+  })
 }
 
 function initAnimations() {
   const rockPositionYDisplace = -200
   const scale = { value: 1 }
+  const time = { value: 0 }
   const { uniforms } = heightmapVariable.material
   const rockEasingIn = TWEEN.Easing.Quadratic.In
   const rockEasingOut = TWEEN.Easing.Quadratic.Out
@@ -620,6 +699,37 @@ function initAnimations() {
       uniforms.uCircularWave.value = circularWavePosition
       uniforms.uCircularWaveRadius.value = circularWaveRadius
     })
+
+  const hh = 10
+  const switchIndex = () => {
+    groups[currentGroupIndex].visible = false
+    currentGroupIndex = (currentGroupIndex + 1) % groups.length
+  }
+  switchSceneAni = new TWEEN.Tween(time)
+    .easing(TWEEN.Easing.Quadratic.InOut)
+    .to({ value: 1 }, 3000)
+    .onStart(() => {
+      const fadeIn = (currentGroupIndex + 1) % groups.length
+      groups[fadeIn].visible = true
+    })
+    .onUpdate((time) => {
+      const t = time.value
+
+      const fadeOut = currentGroupIndex
+      const fadeIn = (currentGroupIndex + 1) % groups.length
+
+      groups[fadeIn].scale.setScalar(t)
+      groups[fadeIn].position.y = hh * (t - 1)
+
+      groups[fadeOut].scale.setScalar(1 - t)
+      groups[fadeOut].position.y = hh * t
+
+      const c1 = new THREE.Color(0x202020)
+      const c2 = new THREE.Color(0x101010)
+      room.material.color.lerpColors(c1, c2, Math.sin(t * 3.1415926))
+    })
+    .onStop(switchIndex)
+    .onComplete(switchIndex)
 }
 
 function createReticle(color = 0xffffff) {
@@ -632,9 +742,9 @@ function createReticle(color = 0xffffff) {
   // })
   const reticle = new THREE.Mesh(rg, rm)
 
-  reticle.position.set(0, .2, 0)
+  reticle.position.set(0, 0.2, 0)
   reticle.visible = false
-  
+
   scene.add(reticle)
 
   return reticle
@@ -758,7 +868,7 @@ function getIntersections(controller, objectsArray) {
 
 function intersectObjects(controller) {
   const line = controller.getObjectByName('line')
-  
+
   const objects = []
   if (meshRay) {
     objects.push(meshRay)
@@ -766,7 +876,7 @@ function intersectObjects(controller) {
   if (rock) {
     objects.push(rock.children[0])
   }
-  
+
   const intersections = getIntersections(controller, objects)
   const { reticle } = controller.userData
 
@@ -775,7 +885,7 @@ function intersectObjects(controller) {
 
     reticle.visible = true
     reticle.position.copy(intersection.point)
-    
+
     line.scale.z = intersection.distance
   } else {
     line.scale.z = 5
@@ -795,42 +905,49 @@ function animate() {
 }
 
 function sceneUpdate(deltaTime, elapsedTime) {
-  if (heightmapVariable.material.uniforms && heightmapVariable.material.uniforms.uTime) {
-    const { uTime } = heightmapVariable.material.uniforms
-    uTime.value += deltaTime
+  if (groups[0].visible) {
+    if (heightmapVariable.material.uniforms && heightmapVariable.material.uniforms.uTime) {
+      const { uTime } = heightmapVariable.material.uniforms
+      uTime.value += deltaTime
+    }
+
+    // rotate
+    if (rock) {
+      rock.rotation.y += deltaTime * rockRotationSpeed
+    }
+
+    // rotate if it's selected
+    if (controller2.userData.touchingRock && controller2.userData.touchingRockVector) {
+      const beginVector = controller2.userData.touchingRockVector
+
+      const ray = new THREE.Ray()
+      tempMatrix.identity().extractRotation(controller2.matrixWorld)
+      ray.origin.setFromMatrixPosition(controller2.matrixWorld)
+      ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
+
+      const endVector = ray.direction
+      const angle = beginVector.angleTo(endVector)
+
+      rock.rotation.y += angle * 0.2
+    }
+  }
+  if (groups[1].visible) {
+    floatingRock.position.y = floatingrockHeightOffset + 0.2 * Math.sin(elapsedTime)
+    floatingRock.rotation.y += deltaTime * 0.1
   }
 
-  // rotate
-  if (rock) {
-    rock.rotation.y += deltaTime * rockRotationSpeed
-  }
-  
-  // rotate if it's selected
-  if (controller2.userData.touchingRock && controller2.userData.touchingRockVector) {
-
-    const beginVector = controller2.userData.touchingRockVector
-    
-    const ray = new THREE.Ray()
-    tempMatrix.identity().extractRotation(controller2.matrixWorld)
-    ray.origin.setFromMatrixPosition(controller2.matrixWorld)
-    ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
-    
-    const endVector = ray.direction
-    const angle = beginVector.angleTo(endVector)
-    
-    rock.rotation.y += angle * .2
-  }
-  
   // walk around
   if (controller1.userData.isSelecting && controller1.userData.walking) {
-    const originalQuaternion = userGroup.quaternion.clone()
-    userGroup.quaternion.copy(dummyCam.getWorldQuaternion())
-    userGroup.translateZ(-deltaTime * WALK_SPEED)
-    
-    // keep the user on the ground
-    // userGroup.position.y = 0
-    
-    userGroup.quaternion.copy(originalQuaternion)
+    // const originalQuaternion = userGroup.quaternion.clone()
+    // userGroup.quaternion.copy(dummyCam.getWorldQuaternion())
+    // userGroup.translateZ(-deltaTime * WALK_SPEED)
+    // userGroup.quaternion.copy(originalQuaternion)
+
+    const ray = new THREE.Ray()
+    tempMatrix.identity().extractRotation(controller1.matrixWorld)
+    ray.origin.setFromMatrixPosition(controller1.matrixWorld)
+    ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
+    userGroup.position.add(ray.direction.multiplyScalar(0.01))
   }
 }
 
@@ -838,10 +955,10 @@ function render() {
   stats.begin()
 
   if (renderer.xr.isPresenting) {
-    intersectObjects(controller1)  
-    intersectObjects(controller2) 
+    intersectObjects(controller1)
+    intersectObjects(controller2)
   }
-  
+
   // TWEEN
   TWEEN.update()
 
